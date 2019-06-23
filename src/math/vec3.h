@@ -32,6 +32,10 @@ public:
 	};
 };
 
+//-----------------------------------------------------------------------------//
+// unary operators                                                             //
+//-----------------------------------------------------------------------------//
+
 inline vec3& vec3::operator+=(const vec3 &v) {
 	e[0] += v.e[0];
 	e[1] += v.e[1];
@@ -69,6 +73,10 @@ inline vec3& vec3::operator/=(const double t) {
 	return *this;
 }
 
+//-----------------------------------------------------------------------------//
+// binary operators                                                            //
+//-----------------------------------------------------------------------------//
+
 inline vec3 operator+(const vec3 &v1, const vec3 &v2) {
 	return vec3(v1.e[0] + v2.e[0], v1.e[1] + v2.e[1], v1.e[2] + v2.e[2]);
 }
@@ -91,15 +99,18 @@ inline vec3 operator*(const vec3 &v, double t) {
 	return vec3(t*v.e[0], t*v.e[1], t*v.e[2]);
 }
 
-inline vec3 normalize(const vec3 &v) {
-	return v / v.length();
+//-----------------------------------------------------------------------------//
+// other operators                                                             //
+//-----------------------------------------------------------------------------//
+
+inline std::ostream& operator<<(std::ostream& os, const vec3& v) {
+	os << "(" << v.x << "," << v.y << "," << v.z << ")" << std::endl;
+	return os;
 }
-inline void vec3::normalize() {
-	double norm = 1.0 / this->length();
-	e[0] *= norm;
-	e[1] *= norm;
-	e[2] *= norm;
-}
+
+//-----------------------------------------------------------------------------//
+// geometric functions                                                         //
+//-----------------------------------------------------------------------------//
 
 inline double dot(const vec3 &v1, const vec3 &v2) {
 	return v1.e[0]*v2.e[0] + v1.e[1]*v2.e[1] + v1.e[2]*v2.e[2];
@@ -111,14 +122,22 @@ inline vec3 cross(const vec3 &v1, const vec3 &v2) {
 		(v1.e[0]*v2.e[1] - v1.e[1]*v2.e[0])
 	);
 }
-
+inline float length(const vec3& v) {
+	return v.length();
+}
+inline vec3 normalize(const vec3 &v) {
+	return v / v.length();
+}
+inline void vec3::normalize() {
+	double norm = 1.0 / this->length();
+	e[0] *= norm;
+	e[1] *= norm;
+	e[2] *= norm;
+}
 inline vec3 randomDir() {
 	vec3 p;
 	do { p = 2.0*vec3(drand(), drand(), drand()) - vec3(1, 1, 1); } while (p.length2() >= 1.0);
 	return p;
-}
-inline vec3 lerp(const vec3 &v1, const vec3 &v2, double t) {
-	return (1.0 - t) * v1 + t * v2;
 }
 inline vec3 reflect(const vec3& v, const vec3& n) {
 	return v - 2 * dot(v, n)*n;
@@ -134,9 +153,25 @@ inline bool refract(const vec3& v, const vec3& n, double niOverNt, vec3& refract
 	}
 	else return false;
 }
-inline std::ostream& operator<<(std::ostream& os, const vec3& v) {
-	os << "(" << v.x << "," << v.y << "," << v.z << ")" << std::endl;
-	return os;
+
+//-----------------------------------------------------------------------------//
+// math functions                                                              //
+//-----------------------------------------------------------------------------//
+
+inline vec3 lerp(const vec3& v1, const vec3& v2, double t) {
+	return (1.0 - t) * v1 + t * v2;
+}
+inline vec3 min(const vec3& v1, const vec3& v2) {
+	float x = std::min(v1.x, v2.x);
+	float y = std::min(v1.y, v2.y);
+	float z = std::min(v1.z, v2.z);
+	return vec3(x, y, z);
+}
+inline vec3 max(const vec3& v1, const vec3& v2) {
+	float x = std::max(v1.x, v2.x);
+	float y = std::max(v1.y, v2.y);
+	float z = std::max(v1.z, v2.z);
+	return vec3(x, y, z);
 }
 
 #endif//VEC3_H

@@ -1,14 +1,14 @@
 #include "app.h"
 
-App::App(unsigned int width, unsigned int height, unsigned int samples) 
-	: m_width(width), m_height(height), m_samples(samples) {
+App::App(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth) 
+	: m_width(width), m_height(height), m_samples(samples), m_maxdepth(maxdepth), m_backgroundcolor(0, 0, 0) {
 	m_image = Image(width, height, 3);
 }
 
 void App::run() {
 	// iterate over all pixels
 	int size = m_width * m_height;
-	for (int i = 0; i < size; i++) {
+	for (size_t i = 0; i < size; ++i) {
 		// print progress
 		console::progress("raytracing", static_cast<double>(i) / static_cast<double>(size - 1));
 
@@ -18,7 +18,7 @@ void App::run() {
 
 		// aggregate color for each sample
 		vec3 col(0, 0, 0);
-		for (int s = 0; s < m_samples; s++) {
+		for (size_t s = 0; s < m_samples; ++s) {
 			double u = static_cast<double>(x + drand()) / static_cast<double>(m_width);
 			double v = static_cast<double>(y + drand()) / static_cast<double>(m_height);
 			ray r = m_camera.getRay(u, v);
@@ -34,24 +34,22 @@ void App::run() {
 	}
 }
 
-void App::write(std::string pngfilepath) {
+void App::write(std::string pngfilepath) const {
 	m_image.write(pngfilepath);
 }
 
-vec3 App::color(const ray& r, int depth) {
+vec3 App::color(const ray& r, int depth) const {
 	HitRecord rec;
 	if (m_world->hit(r, 0.001, 1'000'000, rec)) {
 		ray scattered;
 		vec3 attenuation;
-		if (depth < 50 && rec.material->scatter(r, rec, attenuation, scattered)) {
+		if (depth < m_maxdepth && rec.material->scatter(r, rec, attenuation, scattered)) {
 			return attenuation * color(scattered, depth + 1);
 		} else {
 			return vec3(0, 0, 0);
 		}
 	}
 	else {
-		vec3 dir = normalize(r.dir);
-		double t = 0.5 * (dir.y + 1.0);
-		return lerp(vec3(1.0, 1.0, 1.0), vec3(0.5, 0.7, 1.0), t);
+		return m_backgroundcolor;
 	}
 }

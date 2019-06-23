@@ -10,6 +10,6 @@ void Image::set(int x, int y, const vec3& col) {
     m_data.at(idx+2) = char(255.00*col.b);
 }
 
-void Image::write(std::string filename) {
+void Image::write(std::string filename) const {
     stbi_write_png(filename.c_str(), m_width, m_height, m_channels, m_data.data(), 0);
 }

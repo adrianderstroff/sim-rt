@@ -7,10 +7,6 @@ set(CMAKE_CXX_STANDARD 17)
 # set paths
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/extern)
-set(IMG_DIR ${CMAKE_SOURCE_DIR}/images)
-
-#set defines
-add_definitions(-DIMG_DIR="${IMG_DIR}")
 
 #add openmp support if found
 find_package(OpenMP)

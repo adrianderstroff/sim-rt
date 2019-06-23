@@ -18,7 +18,7 @@ public:
     }
 
     void set(int x, int y, const vec3& col);
-    void write(std::string filename);
+    void write(std::string filename) const;
 
 private:
     int m_width;
