@@ -3,6 +3,7 @@
 
 #include "math/vec3.h"
 
+namespace rt {
 class ray {
 public:
     ray() {}
@@ -12,5 +13,6 @@ public:
     vec3 o;
     vec3 dir;
 };
+}
 
 #endif//RAY_H

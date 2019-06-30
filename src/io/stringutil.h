@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+namespace rt {
+
 static inline std::string ltrim(std::string s) {
 	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
 		return !std::isspace(ch);
@@ -33,6 +35,8 @@ static inline std::vector<std::string> split(const std::string& s, char delimite
 		tokens.push_back(token);
 	}
 	return tokens;
+}
+
 }
 
 #endif//STRING_UTIL_H

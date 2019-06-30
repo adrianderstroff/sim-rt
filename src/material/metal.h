@@ -2,19 +2,22 @@
 #define METAL_H
 
 #include "material.h"
+#include "texture/texture.h"
 
-class Metal : public Material {
+namespace rt {
+class Metal : public IMaterial {
 public:
-	Metal(const vec3& a) : m_albedo(a) {}
+	Metal(std::shared_ptr<ITexture> a) : m_albedo(a) {}
 	virtual bool scatter(const ray& rIn, const HitRecord& rec, vec3& attenuation, ray& scattered) const {
 		vec3 reflected = reflect(normalize(rIn.dir), rec.normal);
 		scattered = ray(rec.p, reflected);
-		attenuation = m_albedo;
+		attenuation = m_albedo->value(rec.u, rec.v);
 		return (dot(scattered.dir, rec.normal) > 0);
 	}
 
 private:
-	vec3 m_albedo;
+	std::shared_ptr<ITexture> m_albedo;
 };
+}
 
 #endif//METAL_H

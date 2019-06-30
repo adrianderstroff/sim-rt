@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-namespace console {
+namespace rt::console {
 	void print(std::string msg);
 	void println(std::string msg);
 	void progress(std::string msg, double percentage, unsigned int barwidth = 50);

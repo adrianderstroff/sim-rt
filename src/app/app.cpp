@@ -1,11 +1,14 @@
 #include "app.h"
 
-App::App(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth) 
+rt::App::App(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth)
 	: m_width(width), m_height(height), m_samples(samples), m_maxdepth(maxdepth), m_backgroundcolor(0, 0, 0) {
 	m_image = Image(width, height, 3);
 }
 
-void App::run() {
+void rt::App::run() {
+	// start timer
+	auto starttime = std::chrono::high_resolution_clock::now();
+
 	// iterate over all pixels
 	int size = m_width * m_height;
 	for (size_t i = 0; i < size; ++i) {
@@ -29,18 +32,23 @@ void App::run() {
 		// gamma correction
 		col = vec3(sqrt(col.r), sqrt(col.g), sqrt(col.b));
 
-		// write to image
+		// set pixel color
 		m_image.set(x, y, col);
 	}
+
+	// print elapsed time
+	auto endtime = std::chrono::high_resolution_clock::now();
+	auto elapsedtime = std::chrono::duration_cast<std::chrono::duration<double>>(endtime - starttime);
+	console::println("elapsed time: " + std::to_string(elapsedtime.count()) + "s");
 }
 
-void App::write(std::string pngfilepath) const {
+void rt::App::write(std::string pngfilepath) const {
 	m_image.write(pngfilepath);
 }
 
-vec3 App::color(const ray& r, int depth) const {
+rt::vec3 rt::App::color(const ray& r, int depth) const {
 	HitRecord rec;
-	if (m_world->hit(r, 0.001, 1'000'000, rec)) {
+	if (m_world->hit(r, 0.001, FLT_MAX, rec)) {
 		ray scattered;
 		vec3 attenuation;
 		if (depth < m_maxdepth && rec.material->scatter(r, rec, attenuation, scattered)) {

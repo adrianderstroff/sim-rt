@@ -2,46 +2,24 @@
 #define SPHERE_H
 
 #include "hitable.h"
+#include "math/vec3.h"
 
-class Sphere: public Hitable {
-public:
-    Sphere() {}
-    Sphere(vec3 c, float r, std::shared_ptr<Material> mat) : center(c), radius(r), material(mat) {};
+namespace rt {
+	class Sphere: public IHitable {
+	public:
+		Sphere() {}
+		Sphere(vec3 c, float r, std::shared_ptr<IMaterial> mat) : center(c), radius(r), material(mat) {};
     
-    virtual bool hit(const ray& r, double tMin, double tMax, HitRecord& rec) const;
+		virtual bool hit(const ray& r, double tMin, double tMax, HitRecord& rec) const;
+		virtual bool boundingbox(aabb& box) const;
 
-    vec3 center;
-    double radius;
-	std::shared_ptr<Material> material;
-};
+		vec3 center;
+		double radius;
+		std::shared_ptr<IMaterial> material;
 
-bool Sphere::hit(const ray& r, double tMin, double tMax, HitRecord& rec) const {
-    vec3 oc = r.o - center;
-    double a = dot(r.dir, r.dir);
-    double b = dot(oc, r.dir);
-    double c = dot(oc, oc) - radius*radius;
-    double discriminant = b*b - a*c;
-
-    if(discriminant > 0) {
-        double temp = (-b - sqrt(b*b - a*c)) / a;
-        if(temp < tMax && temp > tMin) {
-            rec.t = temp;
-            rec.p = r.position(rec.t);
-            rec.normal = (rec.p - center) / radius;
-			rec.material = material;
-            return true;
-        }
-        temp = (-b + sqrt(b*b - a*c)) / a;
-        if(temp < tMax && temp > tMin) {
-            rec.t = temp;
-            rec.p = r.position(rec.t);
-            rec.normal = (rec.p - center) / radius;
-			rec.material = material;
-            return true;
-        }
-    }
-
-    return false;
-};
+	private:
+		void texture_coordinates(const vec3& p, float& u, float& v) const;
+	};
+}
 
 #endif//SPHERE_H

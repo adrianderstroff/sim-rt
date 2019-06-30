@@ -3,7 +3,8 @@
 
 #include "material.h"
 
-class Dielectric : public Material {
+namespace rt {
+class Dielectric : public IMaterial {
 public:
 	Dielectric(float ri) : m_refractionidx(ri) {}
 	virtual bool scatter(const ray& rIn, const HitRecord& rec, vec3& attenuation, ray& scattered) const {
@@ -44,5 +45,6 @@ public:
 private:
 	float m_refractionidx;
 };
+}
 
 #endif//DIELECTRICT_H

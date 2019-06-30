@@ -4,11 +4,12 @@
 #include "ray.h"
 #include "math/constants.h"
 
+namespace rt {
 class Camera {
 public:
 	Camera() { }
     Camera(vec3 pos, vec3 lookAt, vec3 up, double verticalFov, double aspectRatio) {
-		double theta = verticalFov * PI / 180;
+		double theta = verticalFov * constants::DEG_TO_RAD;
 		double halfheight = tan(theta / 2);
 		double halfwidth = aspectRatio * halfheight;
 
@@ -33,5 +34,6 @@ private:
     vec3 m_origin;
 	vec3 m_u, m_v, m_w;
 };
+}
 
 #endif//CAMERA_H

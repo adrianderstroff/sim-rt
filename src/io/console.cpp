@@ -1,14 +1,14 @@
 #include "console.h"
 
-void console::print(std::string msg) {
+void rt::console::print(std::string msg) {
 	std::cout << msg;
 }
 
-void console::println(std::string msg) {
+void rt::console::println(std::string msg) {
 	std::cout << msg << std::endl;
 }
 
-void console::progress(std::string msg, double percentage, unsigned int barwidth) {
+void rt::console::progress(std::string msg, double percentage, unsigned int barwidth) {
 	unsigned int bar = barwidth * percentage;
 	int percentage100 = static_cast<int>(percentage * 100.0);
 	std::string number = (percentage100 < 10) ? "  " : ((percentage100 < 100) ? " " : "");
@@ -19,7 +19,7 @@ void console::progress(std::string msg, double percentage, unsigned int barwidth
 		progress += (i < bar) ? "=" : ((i == bar) ? ">" : " ");
 	}
 	progress += "] " + number;
-	progress += (percentage == 1.0) ? "" : "\r";
+	progress += (percentage == 1.0) ? "\n" : "\r";
 
 	print(msg + progress);
 }
