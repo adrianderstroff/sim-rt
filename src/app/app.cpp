@@ -24,7 +24,7 @@ void rt::App::run() {
 		for (size_t s = 0; s < m_samples; ++s) {
 			double u = static_cast<double>(x + drand()) / static_cast<double>(m_width);
 			double v = static_cast<double>(y + drand()) / static_cast<double>(m_height);
-			ray r = m_camera.getRay(u, v);
+			ray r = m_camera->getRay(u, v);
 			col += color(r, 0);
 		}
 		col /= m_samples;

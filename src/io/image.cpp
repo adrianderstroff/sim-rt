@@ -10,7 +10,7 @@ int rt::Image::height() const { return m_height; }
 int rt::Image::channels() const { return m_channels; }
 
 size_t rt::Image::index(int x, int y) const {
-	return (x + (m_height - y - 1)*m_width)*m_channels;
+	return (x + y*m_width)*m_channels;
 }
 
 void rt::Image::set(int x, int y, const vec3& col) {

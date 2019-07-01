@@ -3,6 +3,7 @@
 
 #include "hitable.h"
 #include "math/vec3.h"
+#include "io/console.h"
 
 namespace rt {
 	class Sphere: public IHitable {
