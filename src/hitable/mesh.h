@@ -21,7 +21,8 @@ public:
 	Mesh(std::vector<std::shared_ptr<Triangle>> triangles, std::shared_ptr<IMaterial> mat)
 		: triangles(triangles), material(mat) {
 		std::vector<std::shared_ptr<IHitable>> hitables(triangles.begin(), triangles.end());
-		bvh.build(hitables);
+		bvh.insert_all(hitables);
+		bvh.build();
 	};
 
 	virtual bool hit(const ray& r, double tMin, double tMax, HitRecord& rec) const override;

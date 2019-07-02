@@ -10,7 +10,7 @@ class HitableList: public IHitable {
 public:
     HitableList() {}
 
-    void add(std::shared_ptr<IHitable> h) { m_list.push_back(h); }
+    void insert(std::shared_ptr<IHitable> h) { m_list.push_back(h); }
 
     virtual bool hit(const ray& r, double tMin, double tMax, HitRecord& rec) const;
 	virtual bool boundingbox(aabb& box) const;

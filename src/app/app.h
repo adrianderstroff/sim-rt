@@ -31,7 +31,7 @@ namespace rt {
 		unsigned int              m_width, m_height, m_samples, m_maxdepth;
 		vec3                      m_backgroundcolor;
 
-		vec3 color(const ray& r, int depth) const;
+		vec3 trace(const ray& r, int depth) const;
 	};
 }
 

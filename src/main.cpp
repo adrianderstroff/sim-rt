@@ -11,6 +11,7 @@
 #include "hitable/rectangle.h"
 #include "io/image.h"
 #include "material/dielectric.h"
+#include "material/diffuselight.h"
 #include "material/lambertian.h"
 #include "material/metal.h"
 #include "material/normal.h"
@@ -19,48 +20,52 @@
 #include "texture/imagetexture.h"
 #include "scene/camera.h"
 
-using rt::vec3, rt::App, rt::Camera;
-using rt::HitableList, rt::Sphere, rt::Rectangle, rt::BVH;
-using rt::NormalMaterial, rt::Lambertian, rt::Metal, rt::Dielectric;
-using rt::ConstantTexture, rt::ImageTexture, rt::Image;
+using namespace rt;
 
 int main() {
-	//App app(160, 120, 20, 10);
-	App app(320, 240, 1000, 100);
-	//rt::App app(1280, 960, 50, 10);
-	app.setBackgroundColor(rt::vec3(1));
+	// create ray tracer
+	//App app(160, 120, 1000, 100);
+	//App app(320, 240, 1000, 100);
+	rt::App app(1280, 960, 1000, 100);
+	app.setBackgroundColor(rt::vec3(0));
 
-	// textures
-	Image image;
-	image.read("./image/test.jpg");
-	std::shared_ptr<ImageTexture> tex = std::make_shared<ImageTexture>(image);
-	auto white = std::make_shared<ConstantTexture>(vec3(0.2, 0.9, 0.3));
+	// create textures
+	Image image; image.read("./image/test.jpg");
+	auto tex = std::make_shared<ImageTexture>(image);
+
+	// create materials
+	auto light = std::make_shared<DiffuseLight>(create_color(vec3(4)));
+	auto glass = std::make_shared<Dielectric>(1.2);
+	auto metal = std::make_shared<Metal>(create_color(vec3(0.6)));
+	auto texmaterial = std::make_shared<Lambertian>(tex);
+	auto white = std::make_shared<Lambertian>(create_color(vec3(1)));
+	auto red = std::make_shared<Lambertian>(create_color(vec3(1,0,0)));
+	auto green = std::make_shared<Lambertian>(create_color(vec3(0,1,0)));
+	auto blue = std::make_shared<Lambertian>(create_color(vec3(0,0,1)));
 
 	// create world
-    std::shared_ptr<HitableList> world = std::make_shared<HitableList>(HitableList());
-	//world->add(std::make_shared<Sphere>(vec3(0, 0, 0), 0.5, std::make_shared<Lambertian>(tex)));
-	world->add(std::make_shared<Sphere>(vec3(0, 0, 0), 0.5, std::make_shared<Dielectric>(1.6, tex)));
-	world->add(std::make_shared<Sphere>(vec3(0, -1000.5, 0), 1000, std::make_shared<Lambertian>(white)));
+    std::shared_ptr<BVH> world = std::make_shared<BVH>(1, 10);
+	world->insert(std::make_shared<Rectangle>(vec3(0, 0, 2), vec3(-2,0,0), vec3(0,2,0), white));             // back
+	world->insert(std::make_shared<Rectangle>(vec3(0,-2, 0), vec3(-2, 0, 0), vec3(0, 0, 2), white));         // bottom
+	world->insert(std::make_shared<Rectangle>(vec3(0, 2, 0), vec3(-2, 0, 0), vec3(0, 0, -2), white));        // top
+	world->insert(std::make_shared<Rectangle>(vec3(2, 0, 0), vec3(0, 0, 2), vec3(0, 2, 0), green));          // left
+	world->insert(std::make_shared<Rectangle>(vec3(-2, 0, 0), vec3(0, 0, -2), vec3(0, 2, 0), red));          // right
+	world->insert(std::make_shared<Rectangle>(vec3(0, 1.99, 0), vec3(-0.5, 0, 0), vec3(0, 0, -0.5), light)); // light
+	// spheres
+	world->insert(std::make_shared<Sphere>(vec3(0, 0.5, 0), 0.5, texmaterial));
+	world->insert(std::make_shared<Sphere>(vec3(1, -0.5, 0), 0.5, glass));
+	world->insert(std::make_shared<Sphere>(vec3(-1, -0.5, 0), 0.5, metal));
+	world->build();
 	app.setHitable(world);
 
-	// setup camera
-    auto cam = std::make_shared<Camera>(vec3(0), vec3(0), vec3(0,1,0), 45, app.aspect());
+	// create camera
+    auto cam = std::make_shared<Camera>(vec3(0,0,-5.5), vec3(0), vec3(0,1,0), 45, app.aspect());
 	app.setCamera(cam);
 
-	int N = 36;
-	float da = 360.f / N;
-	float r = 1.5;
-	for (int i = 0; i < N; ++i) {
-		// update camera position
-		float angle = da * i * rt::constants::DEG_TO_RAD + rt::constants::HALF_PI;
-		float x = std::cos(angle) * r;
-		float z = -std::sin(angle) * r;
-		cam->setPosition(vec3(x, 0, z));
 
-		// perform ray tracing
-		app.run();
-		app.write("./image/myimage"+std::to_string(i)+".png");
-	}
+	// perform ray tracing
+	app.run();
+	app.write("./image/myimage.png");
 
     return 0;
 }

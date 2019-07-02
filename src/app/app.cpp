@@ -25,7 +25,7 @@ void rt::App::run() {
 			double u = static_cast<double>(x + drand()) / static_cast<double>(m_width);
 			double v = static_cast<double>(y + drand()) / static_cast<double>(m_height);
 			ray r = m_camera->getRay(u, v);
-			col += color(r, 0);
+			col += trace(r, 0);
 		}
 		col /= m_samples;
 
@@ -46,15 +46,16 @@ void rt::App::write(std::string pngfilepath) const {
 	m_image.write(pngfilepath);
 }
 
-rt::vec3 rt::App::color(const ray& r, int depth) const {
+rt::vec3 rt::App::trace(const ray& r, int depth) const {
 	HitRecord rec;
 	if (m_world->hit(r, 0.001, FLT_MAX, rec)) {
 		ray scattered;
 		vec3 attenuation;
+		vec3 emitted = rec.material->emitted(rec.u, rec.v);
 		if (depth < m_maxdepth && rec.material->scatter(r, rec, attenuation, scattered)) {
-			return attenuation * color(scattered, depth + 1);
+			return emitted + attenuation * trace(scattered, depth + 1);
 		} else {
-			return vec3(0, 0, 0);
+			return emitted;
 		}
 	}
 	else {

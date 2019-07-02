@@ -22,7 +22,8 @@ void rt::Mesh::normalize() {
 
 	// recompute bvh
 	std::vector<std::shared_ptr<IHitable>> hitables(triangles.begin(), triangles.end());
-	bvh.build(hitables);
+	bvh.insert_all(hitables);
+	bvh.build();
 }
 
 std::shared_ptr<rt::Mesh> rt::loadmesh(std::string filename, std::shared_ptr<IMaterial> mat, bool fliptriangle, bool normalize) {

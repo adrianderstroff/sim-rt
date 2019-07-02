@@ -1,7 +1,14 @@
 #include "bvh.h"
 
-void rt::BVH::build(std::vector<std::shared_ptr<IHitable>> hitables) {
-	m_root = create_node(hitables, 0);
+void rt::BVH::insert(std::shared_ptr<IHitable> hitable) {
+	m_hitables.push_back(hitable);
+}
+void rt::BVH::insert_all(std::vector<std::shared_ptr<IHitable>> hitables) {
+	m_hitables.insert(m_hitables.end(), hitables.begin(), hitables.end());
+}
+
+void rt::BVH::build() {
+	m_root = create_node(m_hitables, 0);
 }
 
 std::shared_ptr<rt::BVH::Node> rt::BVH::create_node(std::vector<std::shared_ptr<IHitable>> hitables, size_t depth) {

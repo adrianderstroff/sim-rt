@@ -15,6 +15,10 @@ namespace rt {
 	private:
 		vec3 m_color;
 	};
+
+	std::shared_ptr<ConstantTexture> create_color(const vec3& color) {
+		return std::make_shared<ConstantTexture>(color);
+	}
 }
 
 #endif//CONSTANT_TEXTURE_H
