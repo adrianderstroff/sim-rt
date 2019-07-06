@@ -4,6 +4,59 @@ rt::App::App(unsigned int width, unsigned int height, unsigned int samples, size
 	: m_width(width), m_height(height), m_samples(samples), m_maxdepth(maxdepth), m_backgroundcolor(0, 0, 0) {
 	m_image = Image(width, height, 3);
 }
+rt::App::App(Resolution r, Samples s, TraceDepth t) : m_backgroundcolor(0,0,0) {
+	// determine resolution
+	switch (r) {
+	case Resolution::THUMBNAIL:
+		m_width = 160; m_height = 120;
+		break;
+	case Resolution::LOW:
+		m_width = 320; m_height = 240;
+		break;
+	case Resolution::MEDIUM:
+		m_width = 640; m_height = 480;
+		break;
+	case Resolution::HIGH:
+		m_width = 1280; m_height = 960;
+		break;
+	default:
+		m_width = 160; m_height = 120;
+		break;
+	}
+	m_image = Image(m_width, m_height, 3);
+
+	// determine number of samples
+	switch (s) {
+	case Samples::LOW:
+		m_samples = 10;
+		break;
+	case Samples::MEDIUM:
+		m_samples = 100;
+		break;
+	case Samples::HIGH:
+		m_samples = 1000;
+		break;
+	default:
+		m_samples = 10;
+		break;
+	}
+
+	// determine ray tracing depth
+	switch (t) {
+	case TraceDepth::LOW:
+		m_maxdepth = 10;
+		break;
+	case TraceDepth::MEDIUM:
+		m_maxdepth = 50;
+		break;
+	case TraceDepth::HIGH:
+		m_maxdepth = 100;
+		break;
+	default:
+		m_maxdepth = 10;
+		break;
+	}
+}
 
 void rt::App::run() {
 	// start timer
@@ -39,7 +92,7 @@ void rt::App::run() {
 	// print elapsed time
 	auto endtime = std::chrono::high_resolution_clock::now();
 	auto elapsedtime = std::chrono::duration_cast<std::chrono::duration<double>>(endtime - starttime);
-	console::println("elapsed time: " + std::to_string(elapsedtime.count()) + "s");
+	console::println("elapsed time: " + format_time(elapsedtime.count()));
 }
 
 void rt::App::write(std::string pngfilepath) const {

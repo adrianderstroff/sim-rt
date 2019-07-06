@@ -7,13 +7,32 @@
 #include "hitable/hitable.h"
 #include "io/image.h"
 #include "io/console.h"
+#include "io/stringutil.h"
 #include "material/material.h"
 #include "scene/camera.h"
 
 namespace rt {
+	enum class Resolution {
+		THUMBNAIL,
+		LOW,
+		MEDIUM,
+		HIGH
+	};
+	enum class Samples {
+		LOW,
+		MEDIUM,
+		HIGH
+	};
+	enum class TraceDepth {
+		LOW,
+		MEDIUM,
+		HIGH
+	};
+
 	class App {
 	public:
 		App(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth = 50);
+		App(Resolution r = Resolution::MEDIUM, Samples s = Samples::MEDIUM, TraceDepth t = TraceDepth::MEDIUM);
 
 		void setHitable(std::shared_ptr<IHitable> h) { m_world = h; }
 		void setCamera(std::shared_ptr <Camera> cam) { m_camera = cam; }
