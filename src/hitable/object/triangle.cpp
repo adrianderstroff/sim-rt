@@ -9,7 +9,7 @@ bool rt::Triangle::hit(const ray& r, double tMin, double tMax, HitRecord& rec) c
 
 	// ray and triangle are parallel
 	//if (fabs(det) < constants::EPS) return false;
-	if (det < constants::EPS) return false;
+	if (det < rt::EPS) return false;
 
 	float invdet = 1.0f / det;
 
@@ -33,12 +33,14 @@ bool rt::Triangle::hit(const ray& r, double tMin, double tMax, HitRecord& rec) c
 	vec3 bcoords = barycentric(p, p1, p2, p3);
 	vec3 n = normalize(from_barycentric(bcoords, n1, n2, n3));
 	vec3 uvw = from_barycentric(bcoords, t1, t2, t3);
+	vec3 lp = (p1 + p2 + p3) / 3.f;
 
 	rec.t = t;
 	rec.p = p;
 	rec.normal = n;
 	rec.u = uvw.x; 
 	rec.v = uvw.y;
+	rec.lp = lp;
 	rec.material = m_material;
 
 	return true;

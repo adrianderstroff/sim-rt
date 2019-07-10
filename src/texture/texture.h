@@ -1,13 +1,9 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "math/vec3.h"
-
-namespace rt {
-	class ITexture {
-	public:
-		virtual vec3 value(float u, float v) const = 0;
-	};
-}
+#include "cubemap.h"
+#include "constanttexture.h"
+#include "imagetexture.h"
+#include "itexture.h"
 
 #endif//TEXTURE_H

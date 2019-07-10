@@ -1,7 +1,7 @@
 #ifndef NORMAL_MATERIAL_H
 #define NORMAL_MATERIAL_H
 
-#include "material.h"
+#include "imaterial.h"
 
 namespace rt {
 class NormalMaterial : public IMaterial {

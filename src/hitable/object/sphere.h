@@ -1,14 +1,14 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include "hitable.h"
-#include "math/vec3.h"
+#include "hitable/ihitable.h"
 #include "io/console.h"
+#include "math/vec3.h"
 
 namespace rt {
 	class Sphere: public IHitable {
 	public:
-		Sphere() {}
+		Sphere() : radius(0) {}
 		Sphere(vec3 c, float r, std::shared_ptr<IMaterial> mat) : center(c), radius(r), material(mat) {};
     
 		virtual bool hit(const ray& r, double tMin, double tMax, HitRecord& rec) const;

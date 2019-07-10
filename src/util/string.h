@@ -86,9 +86,9 @@ namespace rt {
 
 	inline std::string format_time(double time) {
 		int h = static_cast<int>(std::floor(time / 3600));
-		time -= h * 3600;
+		time -= h * 3600.0;
 		int m = static_cast<int>(std::floor(time / 60));
-		time -= m * 60;
+		time -= m * 60.0;
 		int s = static_cast<int>(std::floor(time));
 		int ms = static_cast<int>(1000*(time - s));
 

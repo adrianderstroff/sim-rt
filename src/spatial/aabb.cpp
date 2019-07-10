@@ -14,7 +14,7 @@ bool rt::aabb::hit(const ray& r, float tmin, float tmax) const {
 		
 		tmin = std::max(tmin, t0);
 		tmax = std::min(tmax, t1);
-		if (tmax <= tmin) return false;
+		if (tmax < tmin) return false;
 	}
 	return true;
 }

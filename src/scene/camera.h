@@ -14,7 +14,7 @@ namespace rt {
 			m_lookat = lookAt;
 			m_aspectratio = aspectRatio;
 		
-			double theta = verticalFov * constants::DEG_TO_RAD;
+			double theta = verticalFov * rt::DEG_TO_RAD;
 			m_halfheight = tan(theta / 2);
 			m_halfwidth = aspectRatio * m_halfheight;
 

@@ -15,6 +15,7 @@ bool rt::Sphere::hit(const ray& r, double tMin, double tMax, HitRecord& rec) con
 			rec.normal = normalize(rec.p - center);
 			rec.material = material;
 			texture_coordinates(rec.normal, rec.u, rec.v);
+			rec.lp = rec.p - center;
 			return true;
 		}
 		temp = (-b + sqrt(b*b - a * c)) / a;
@@ -24,6 +25,7 @@ bool rt::Sphere::hit(const ray& r, double tMin, double tMax, HitRecord& rec) con
 			rec.normal = normalize(rec.p - center);
 			rec.material = material;
 			texture_coordinates(rec.normal, rec.u, rec.v);
+			rec.lp = rec.p - center;
 			return true;
 		}
 	}
@@ -39,10 +41,10 @@ bool rt::Sphere::boundingbox(aabb& box) const {
 void rt::Sphere::texture_coordinates(const vec3& p, float& u, float& v) const {
 	// cartesian to spherical coordinates
 	float r = rt::length(p);
-	float theta = std::atan2f(p.x, p.z) + constants::PI;
+	float theta = std::atan2f(p.x, p.z) + rt::PI;
 	float phi = std::acosf(p.y / r);
 
 	// spherical coordinates to uv space
-	u = theta / constants::TWO_PI;
-	v = phi / constants::PI;
+	u = theta / rt::TWO_PI;
+	v = phi / rt::PI;
 }

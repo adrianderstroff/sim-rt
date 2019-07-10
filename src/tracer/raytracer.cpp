@@ -1,10 +1,10 @@
-#include "app.h"
+#include "raytracer.h"
 
-rt::App::App(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth)
+rt::Raytracer::Raytracer(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth)
 	: m_width(width), m_height(height), m_samples(samples), m_maxdepth(maxdepth), m_backgroundcolor(0, 0, 0) {
 	m_image = Image(width, height, 3);
 }
-rt::App::App(Resolution r, Samples s, TraceDepth t) : m_backgroundcolor(0,0,0) {
+rt::Raytracer::Raytracer(Resolution r, Samples s, TraceDepth t) : m_backgroundcolor(0,0,0) {
 	// determine resolution
 	switch (r) {
 	case Resolution::THUMBNAIL:
@@ -58,7 +58,13 @@ rt::App::App(Resolution r, Samples s, TraceDepth t) : m_backgroundcolor(0,0,0) {
 	}
 }
 
-void rt::App::run() {
+void rt::Raytracer::run() {
+	// print tracer settings
+	console::println("TYPE  : Raytracer");
+	console::println("RES   : " + std::to_string(m_width) + "x" + std::to_string(m_height));
+	console::println("MSAA  : " + std::to_string(m_samples));
+	console::println("DEPTH : " + std::to_string(m_maxdepth));
+
 	// start timer
 	auto starttime = std::chrono::high_resolution_clock::now();
 
@@ -95,16 +101,16 @@ void rt::App::run() {
 	console::println("elapsed time: " + format_time(elapsedtime.count()));
 }
 
-void rt::App::write(std::string pngfilepath) const {
+void rt::Raytracer::write(std::string pngfilepath) const {
 	m_image.write(pngfilepath);
 }
 
-rt::vec3 rt::App::trace(const ray& r, int depth) const {
+rt::vec3 rt::Raytracer::trace(const ray& r, int depth) const {
 	HitRecord rec;
 	if (m_world->hit(r, 0.001, FLT_MAX, rec)) {
 		ray scattered;
 		vec3 attenuation;
-		vec3 emitted = rec.material->emitted(rec.u, rec.v);
+		vec3 emitted = rec.material->emitted(rec.u, rec.v, rec.lp);
 		if (depth < m_maxdepth && rec.material->scatter(r, rec, attenuation, scattered)) {
 			return emitted + attenuation * trace(scattered, depth + 1);
 		} else {

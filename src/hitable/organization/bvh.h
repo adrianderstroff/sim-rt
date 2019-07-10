@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "hitable/hitable.h"
+#include "hitable/ihitable.h"
 
 namespace rt {
 class BVH : public IHitable {

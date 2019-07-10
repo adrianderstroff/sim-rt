@@ -14,8 +14,8 @@ namespace rt {
 	 */
 	class Image {
 	public:
-		Image() {}
-		Image(int width, int height, int channels) { 
+		Image() : m_width(0), m_height(0), m_channels(0) {}
+		Image(size_t width, size_t height, size_t channels) {
 			m_width    = width; 
 			m_height   = height; 
 			m_channels = channels; 
@@ -27,17 +27,17 @@ namespace rt {
 		 * returns width of the image
 		 * @return width of the image
 		 */
-		int width() const;
+		size_t width() const;
 		/**
 		 * returns height of the image
 		 * @return height of the image
 		 */
-		int height() const;
+		size_t height() const;
 		/**
 		 * returns number of color channels
 		 * @return number of color channels
 		 */
-		int channels() const;
+		size_t channels() const;
 
 		/**
 		 * sets pixel color at position (x,y)
@@ -45,14 +45,14 @@ namespace rt {
 		 * @param y - y-position of the pixel
 		 * @param col - color to update
 		 */
-		void set(int x, int y, const vec3& col);
+		void set(size_t x, size_t y, const vec3& col);
 		/**
 		 * gets pixel color at position (x,y)
 		 * @param x - x-position of the pixel
 		 * @param y - y-position of the pixel
 		 * @return col at (x,y)
 		 */
-		vec3 get(int x, int y) const;
+		vec3 get(size_t x, size_t y) const;
 
 		/**
 		 * writes current image data to file
@@ -67,9 +67,9 @@ namespace rt {
 		bool read(std::string filename);
 
 	private:
-		int m_width;
-		int m_height;
-		int m_channels;
+		size_t m_width;
+		size_t m_height;
+		size_t m_channels;
 		std::vector<unsigned char> m_data;
 
 		/**
@@ -78,7 +78,14 @@ namespace rt {
 		 * @param y - y-position of the pixel
 		 * @return 1D pixel position
 		 */
-		size_t index(int x, int y) const;
+		size_t index(size_t x, size_t y) const;
+
+		/**
+		 * performs inverse gamma to make sure
+		 * that the image contains it's original
+		 * color
+		 */
+		void inv_gamma();
 	};
 }
 

@@ -1,15 +1,15 @@
-#ifndef APP_H
-#define APP_H
+#ifndef RAYTRACER_H
+#define RAYTRACER_H
 
 #include <chrono>
 #include <string>
 
-#include "hitable/hitable.h"
+#include "hitable/ihitable.h"
 #include "io/image.h"
 #include "io/console.h"
-#include "io/stringutil.h"
-#include "material/material.h"
+#include "material/imaterial.h"
 #include "scene/camera.h"
+#include "util/string.h"
 
 namespace rt {
 	enum class Resolution {
@@ -29,10 +29,10 @@ namespace rt {
 		HIGH
 	};
 
-	class App {
+	class Raytracer {
 	public:
-		App(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth = 50);
-		App(Resolution r = Resolution::MEDIUM, Samples s = Samples::MEDIUM, TraceDepth t = TraceDepth::MEDIUM);
+		Raytracer(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth = 50);
+		Raytracer(Resolution r = Resolution::MEDIUM, Samples s = Samples::MEDIUM, TraceDepth t = TraceDepth::MEDIUM);
 
 		void setHitable(std::shared_ptr<IHitable> h) { m_world = h; }
 		void setCamera(std::shared_ptr <Camera> cam) { m_camera = cam; }
@@ -54,4 +54,4 @@ namespace rt {
 	};
 }
 
-#endif//APP_H
+#endif//RAYTRACER_H

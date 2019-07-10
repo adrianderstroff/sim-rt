@@ -1,8 +1,8 @@
 #ifndef LAMBERTIAN_H
 #define LAMBERTIAN_H
 
-#include "material.h"
-#include "texture/texture.h"
+#include "imaterial.h"
+#include "texture/itexture.h"
 
 namespace rt {
 	class Lambertian : public IMaterial {
@@ -12,7 +12,7 @@ namespace rt {
 		virtual bool scatter(const ray& rIn, const HitRecord& rec, vec3& attenuation, ray& scattered) const {
 			vec3 target = rec.p + rec.normal + randomDir();
 			scattered = ray(rec.p, target - rec.p);
-			attenuation = m_albedo->value(rec.u, rec.v);
+			attenuation = m_albedo->value(rec.u, rec.v, rec.lp);
 			return true;
 		}
 

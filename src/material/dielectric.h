@@ -1,21 +1,21 @@
 #ifndef DIELECTRICT_H
 #define DIELECTRICT_H
 
-#include "material.h"
-#include "texture/texture.h"
+#include "imaterial.h"
+#include "texture/itexture.h"
 #include "texture/constanttexture.h"
 
 namespace rt {
 	class Dielectric : public IMaterial {
 	public:
-		Dielectric(float ri, std::shared_ptr<ITexture> texture = std::make_shared<ConstantTexture>(vec3(1))) 
+		Dielectric(float ri, std::shared_ptr<ITexture> texture = create_color(vec3(1))) 
 			: m_refractionidx(ri), m_texture(texture) {}
 
 		virtual bool scatter(const ray& rIn, const HitRecord& rec, vec3& attenuation, ray& scattered) const {
 			vec3 outwardNormal;
 			vec3 reflected = reflect(rIn.dir, rec.normal);
 			float niOverNt;
-			attenuation = m_texture->value(rec.u, rec.v);
+			attenuation = m_texture->value(rec.u, rec.v, rec.lp);
 			double cosine;
 			double reflectProb;
 		

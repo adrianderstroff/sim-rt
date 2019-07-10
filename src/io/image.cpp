@@ -5,22 +5,22 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-int rt::Image::width() const { return m_width; }
-int rt::Image::height() const { return m_height; }
-int rt::Image::channels() const { return m_channels; }
+size_t rt::Image::width()    const { return m_width;    }
+size_t rt::Image::height()   const { return m_height;   }
+size_t rt::Image::channels() const { return m_channels; }
 
-size_t rt::Image::index(int x, int y) const {
+size_t rt::Image::index(size_t x, size_t y) const {
 	return (x + y*m_width)*m_channels;
 }
 
-void rt::Image::set(int x, int y, const vec3& col) {
-    int idx = index(x, y);
+void rt::Image::set(size_t x, size_t y, const vec3& col) {
+	size_t idx = index(x, y);
     m_data.at(idx+0) = char(255.99*col.r);
     m_data.at(idx+1) = char(255.99*col.g);
     m_data.at(idx+2) = char(255.99*col.b);
 }
 
-rt::vec3 rt::Image::get(int x, int y) const {
+rt::vec3 rt::Image::get(size_t x, size_t y) const {
 	size_t idx = index(x, y);
 	float r = static_cast<float>(m_data.at(idx + 0)) / 255.f;
 	float g = static_cast<float>(m_data.at(idx + 1)) / 255.f;
@@ -29,14 +29,37 @@ rt::vec3 rt::Image::get(int x, int y) const {
 	return vec3(r, g, b);
 }
 
+void rt::Image::inv_gamma() {
+	for (size_t y = 0; y < m_height; ++y) {
+		for (size_t x = 0; x < m_width; ++x) {
+			vec3 pixel = get(x, y);
+			pixel.x *= pixel.x;
+			pixel.y *= pixel.y;
+			pixel.z *= pixel.z;
+			set(x, y, pixel);
+		}
+	}
+}
+
 void rt::Image::write(std::string filename) const {
     stbi_write_png(filename.c_str(), m_width, m_height, m_channels, m_data.data(), 0);
 }
 
 bool rt::Image::read(std::string filename) {
 	// load data
-	unsigned char* data = stbi_load(filename.c_str(), &m_width, &m_height, &m_channels, 3);
-	if (m_channels != 3) console::print("Channels is not 3");
+	int tempwidth, tempheight, tempchannels;
+	unsigned char* data = stbi_load(filename.c_str(), &tempwidth, &tempheight, &tempchannels, 3);
+	
+	// set image dimensions
+	m_width = tempwidth;
+	m_height = tempheight;
+	m_channels = tempchannels;
+	
+	// adapt channels if number of channels is not 3
+	if (tempchannels != 3) {
+		console::print("Channels is not 3");
+		m_channels = 3;
+	}
 
 	// error handling
 	if (data == nullptr) return false;
@@ -51,6 +74,8 @@ bool rt::Image::read(std::string filename) {
 			}
 		}
 	}
+
+	inv_gamma();
 
 	// release data
 	stbi_image_free(data);

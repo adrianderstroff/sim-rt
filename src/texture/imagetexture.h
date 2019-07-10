@@ -1,7 +1,7 @@
 #ifndef IMAGE_TEXTURE_H
 #define IMAGE_TEXTURE_H
 
-#include "texture.h"
+#include "itexture.h"
 #include "io/image.h"
 
 namespace rt {
@@ -35,11 +35,13 @@ namespace rt {
 
 		/**
 		 * calculates the color for the continuous position (u,v)
+		 * and local object position p
 		 * @param u - horizontal coordinate in the range [0,1]
 		 * @param v - vertical coordinate in the range [0,1]
+		 * @param p - local position of the intersection point
 		 * @return color value for the position (u,v)
 		 */
-		vec3 value(float u, float v) const override {
+		vec3 value(float u, float v, const vec3& p) const override {
 			vec3 color;
 			
 			switch (m_interpolationmethod) {

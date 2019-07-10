@@ -1,7 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-namespace rt::constants {
+namespace rt {
 	const double PI = 3.141592653589;
 	const double TWO_PI = 2 * PI;
 	const double HALF_PI = 0.5 * PI;

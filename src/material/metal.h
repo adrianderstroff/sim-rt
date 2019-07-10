@@ -1,8 +1,8 @@
 #ifndef METAL_H
 #define METAL_H
 
-#include "material.h"
-#include "texture/texture.h"
+#include "imaterial.h"
+#include "texture/itexture.h"
 
 namespace rt {
 class Metal : public IMaterial {
@@ -11,7 +11,7 @@ public:
 	virtual bool scatter(const ray& rIn, const HitRecord& rec, vec3& attenuation, ray& scattered) const {
 		vec3 reflected = reflect(normalize(rIn.dir), rec.normal);
 		scattered = ray(rec.p, reflected);
-		attenuation = m_albedo->value(rec.u, rec.v);
+		attenuation = m_albedo->value(rec.u, rec.v, rec.lp);
 		return (dot(scattered.dir, rec.normal) > 0);
 	}
 

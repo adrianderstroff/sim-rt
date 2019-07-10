@@ -1,9 +1,9 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
-#include "hitable/hitable.h"
-#include "math/vec3.h"
+#include "hitable/ihitable.h"
 #include "math/constants.h"
+#include "math/vec3.h"
 
 namespace rt {
 	class Triangle : public IHitable {

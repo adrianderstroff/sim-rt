@@ -1,6 +1,6 @@
 #include "rectangle.h"
 
-rt::Rectangle::Rectangle(vec3 p, float width, float height, std::shared_ptr<IMaterial> mat) {
+rt::Rectangle::Rectangle(vec3 p, float width, float height, std::shared_ptr<IMaterial> mat) : m_position(p) {
 	vec3 halfwidth = vec3(width / 2, 0, 0);
 	vec3 halfheight = vec3(0, height / 2, 0);
 
@@ -23,7 +23,7 @@ rt::Rectangle::Rectangle(vec3 p, float width, float height, std::shared_ptr<IMat
 	m_t2 = Triangle(p3, p2, p4, n, n, n, t3, t2, t4, mat);
 }
 
-rt::Rectangle::Rectangle(vec3 p, vec3 right, vec3 up, std::shared_ptr<IMaterial> mat) {
+rt::Rectangle::Rectangle(vec3 p, vec3 right, vec3 up, std::shared_ptr<IMaterial> mat) : m_position(p) {
 	// determine positions
 	vec3 p1 = p - right + up;
 	vec3 p2 = p - right - up;
@@ -34,10 +34,10 @@ rt::Rectangle::Rectangle(vec3 p, vec3 right, vec3 up, std::shared_ptr<IMaterial>
 	vec3 n = rt::normal(p1, p2, p3);
 
 	// determine texture coordinates
-	vec3 t1(0, 1, 0);
-	vec3 t2(0, 0, 0);
-	vec3 t3(1, 1, 0);
-	vec3 t4(1, 0, 0);
+	vec3 t1(0, 0, 0);
+	vec3 t2(0, 1, 0);
+	vec3 t3(1, 0, 0);
+	vec3 t4(1, 1, 0);
 
 	m_t1 = Triangle(p1, p2, p3, n, n, n, t1, t2, t3, mat);
 	m_t2 = Triangle(p3, p2, p4, n, n, n, t3, t2, t4, mat);
@@ -51,8 +51,12 @@ bool rt::Rectangle::hit(const ray& r, double tMin, double tMax, HitRecord& rec) 
 	if (hit1 && hit2) rec = (rec1.t < rec2.t) ? rec1 : rec2;
 	else if (hit1) rec = rec1;
 	else if (hit2) rec = rec2;
+	bool anyhit = hit1 || hit2;
 
-	return hit1 || hit2;
+	// update local position of the intersection
+	if (anyhit) rec.lp = rec.p - m_position;
+
+	return anyhit;
 }
 bool rt::Rectangle::boundingbox(aabb& box) const {
 	aabb box1, box2;

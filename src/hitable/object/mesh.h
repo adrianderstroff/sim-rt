@@ -7,12 +7,12 @@
 #include <string>
 #include <vector>
 
-#include "bvh.h"
-#include "hitable.h"
-#include "triangle.h"
-#include "io/stringutil.h"
+#include "hitable/organization/bvh.h"
+#include "hitable/ihitable.h"
 #include "math/constants.h"
 #include "math/vec3.h"
+#include "util/string.h"
+#include "triangle.h"
 
 namespace rt {
 class Mesh : public IHitable {

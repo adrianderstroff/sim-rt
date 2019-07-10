@@ -1,10 +1,9 @@
 #ifndef RECTANGLE_H
 #define RECTANGLE_H
 
-#include "hitable.h"
-#include "triangle.h"
+#include "hitable/ihitable.h"
 #include "math/constants.h"
-
+#include "triangle.h"
 
 namespace rt {
 	class Rectangle : public IHitable {
@@ -17,6 +16,7 @@ namespace rt {
 		virtual bool boundingbox(aabb& box) const override;
 
 	private:
+		vec3 m_position;
 		Triangle m_t1, m_t2;
 	};
 }
