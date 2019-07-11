@@ -22,8 +22,17 @@ namespace rt {
 			NEAREST_NEIGHBOR,
 			BILINEAR
 		};
+		/**
+		 * wrap type determines how to handle values outside
+		 * of the image bounds
+		 */
+		enum Wrap {
+			REPEAT,
+			CLAMP
+		};
 
-		ImageTexture(const Image& image) : m_image(image), m_interpolationmethod(BILINEAR) {}
+		ImageTexture(const Image& image) 
+			: m_image(image), m_interpolationmethod(BILINEAR), m_wrapx(CLAMP), m_wrapy(CLAMP) {}
 
 		/**
 		 * setter for the interpolation method
@@ -31,6 +40,15 @@ namespace rt {
 		 */
 		void set_interpolation_method(const Interpolation& interpolation) {
 			m_interpolationmethod = interpolation;
+		}
+		/**
+		 * setter for the wrap method
+		 * @param wrapx - wrap method in x direction
+		 * @param wrapy - wrap method in y direction
+		 */
+		void set_wrap_method(const Wrap& wrapx, const Wrap& wrapy) {
+			m_wrapx = wrapx;
+			m_wrapy = wrapy;
 		}
 
 		/**
@@ -59,6 +77,7 @@ namespace rt {
 	private:
 		Image m_image;
 		Interpolation m_interpolationmethod;
+		Wrap m_wrapx, m_wrapy;
 
 		/**
 		 * gets the color value of the discrete pixel
@@ -67,6 +86,7 @@ namespace rt {
 		vec3 nearest_neighbor(float u, float v) const {
 			int x = u * (m_image.width() - 1);
 			int y = v * (m_image.height() - 1);
+			handle_border(x, y);
 			return m_image.get(x, y);
 		}
 
@@ -90,6 +110,10 @@ namespace rt {
 			int y0 = std::floor(fy);
 			int y1 = std::ceil(fy);
 
+			// handle border cases
+			handle_border(x0, y0);
+			handle_border(x1, y1);
+
 			// retrieve color of the pixels
 			vec3 c00 = m_image.get(x0, y0);
 			vec3 c10 = m_image.get(x1, y0);
@@ -102,6 +126,32 @@ namespace rt {
 			vec3 color = lerp(cy0, cy1, ry);
 
 			return color;
+		}
+
+		/**
+		 * handles values outside of the image dimensions
+		 * and updates x and y accordingly to the Wrap method
+		 */
+		void handle_border(int& x, int& y) const {
+			// handle x direction
+			if (x < 0) {
+				if (m_wrapx == Wrap::CLAMP) x = 0;
+				if (m_wrapx == Wrap::REPEAT) while (x < 0) { x = m_image.width() + x; }
+			}
+			else if (x >= m_image.width()) {
+				if (m_wrapx == Wrap::CLAMP) x = m_image.width() - 1;
+				if (m_wrapx == Wrap::REPEAT) while (x >= m_image.width()) { x = x - m_image.width(); }
+			}
+
+			// handle y direction
+			if (y < 0) {
+				if (m_wrapy == Wrap::CLAMP) y = 0;
+				if (m_wrapy == Wrap::REPEAT) while (y < 0) { y = m_image.height() + y; }
+			}
+			else if (y >= m_image.height()) {
+				if (m_wrapy == Wrap::CLAMP) y = m_image.height() - 1;
+				if (m_wrapy == Wrap::REPEAT) while (y >= m_image.height()) { y = y - m_image.height(); }
+			}
 		}
 	};
 }
