@@ -61,22 +61,21 @@ std::shared_ptr<rt::BVH::Node> rt::BVH::create_node(std::vector<std::shared_ptr<
 	return node;
 }
 
-bool rt::BVH::hit(const ray& r, double tMin, double tMax, HitRecord& rec) const {
-	return hit_node(r, m_root, tMin, tMax, rec);
+bool rt::BVH::hit(const ray& r, double tmin, double tmax, HitRecord& rec) const {
+	return hit_node(r, m_root, tmin, tmax, rec);
 }
-bool rt::BVH::hit_node(const ray& r, const std::shared_ptr<Node> node, double tMin, double tMax, HitRecord& rec) const {
+bool rt::BVH::hit_node(const ray& r, const std::shared_ptr<Node> node, double tmin, double tmax, HitRecord& rec) const {
 	// only test children if ray intersects bounding box
-	if (node->bounds.hit(r, tMin, tMax)) {
+	if (node->bounds.hit(r, tmin, tmax)) {
 		bool anyhit = false;
 
 		// leaf node
 		if (node->left == nullptr) {
 			// check all children and find closest hit
-			float tmin = FLT_MAX;
 			HitRecord temprec;
 			for (auto h : node->data) {
-				if (h->hit(r, tMin, tMax, temprec) && temprec.t < tmin) {
-					tmin = temprec.t;
+				if (h->hit(r, tmin, tmax, temprec)) {
+					tmax = temprec.t;
 					rec = temprec;
 					anyhit = true;
 				}
@@ -89,8 +88,8 @@ bool rt::BVH::hit_node(const ray& r, const std::shared_ptr<Node> node, double tM
 			recordright.t = FLT_MAX;
 
 			// check children recursively
-			bool hitleft  = hit_node(r, node->left, tMin, tMax, recordleft);
-			bool hitright = hit_node(r, node->right, tMin, tMax, recordright);
+			bool hitleft  = hit_node(r, node->left, tmin, tmax, recordleft);
+			bool hitright = hit_node(r, node->right, tmin, tmax, recordright);
 			anyhit = hitleft || hitright;
 
 			// get the record of the right closest child

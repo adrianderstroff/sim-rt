@@ -4,6 +4,7 @@
 #include "dielectric.h"
 #include "diffuselight.h"
 #include "imaterial.h"
+#include "isotropic.h"
 #include "lambertian.h"
 #include "metal.h"
 #include "normal.h"

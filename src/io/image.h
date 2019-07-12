@@ -10,7 +10,7 @@
 namespace rt {
 	/**
 	 * datastructure for reading, modifying and writing images
-	 * the first pixel is in the upper left corner
+	 * the origin of the image is in the upper left corner
 	 */
 	class Image {
 	public:

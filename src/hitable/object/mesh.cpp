@@ -1,7 +1,7 @@
 #include "mesh.h"
 
-bool rt::Mesh::hit(const ray& r, double tMin, double tMax, HitRecord& rec) const {
-	if (bvh.hit(r, tMin, tMax, rec)) {
+bool rt::Mesh::hit(const ray& r, double tmin, double tmax, HitRecord& rec) const {
+	if (bvh.hit(r, tmin, tmax, rec)) {
 		// mesh is already in local coordiantes
 		// thus the intersection point is in
 		// local coordinates as well

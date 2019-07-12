@@ -1,6 +1,6 @@
 #include "triangle.h"
 
-bool rt::Triangle::hit(const ray& r, double tMin, double tMax, HitRecord& rec) const {
+bool rt::Triangle::hit(const ray& r, double tmin, double tmax, HitRecord& rec) const {
 	// moeller-trumbore algorithm
 	vec3 v1 = p2 - p1;
 	vec3 v2 = p3 - p1;
@@ -8,8 +8,8 @@ bool rt::Triangle::hit(const ray& r, double tMin, double tMax, HitRecord& rec) c
 	float det = dot(v1, pvec);
 
 	// ray and triangle are parallel
-	//if (fabs(det) < constants::EPS) return false;
-	if (det < rt::EPS) return false;
+	if (fabs(det) < rt::EPS) return false;
+	//if (det < rt::EPS) return false;
 
 	float invdet = 1.0f / det;
 
@@ -26,7 +26,7 @@ bool rt::Triangle::hit(const ray& r, double tMin, double tMax, HitRecord& rec) c
 	// calculate t-coordinate
 	float t = dot(v2, qvec) * invdet;
 
-	if (t < tMin) return false;
+	if (t < tmin || t > tmax) return false;
 
 	// determine barycentric coordinates
 	vec3 p = r.position(t);
