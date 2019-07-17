@@ -25,15 +25,23 @@ namespace rt {
 		 * get a ray for the position (s,t) that starts in the upper left corner
 		 * and continues right and down with increasing s and t
 		 */
-		ray getRay(double s, double t) {
-			return ray(m_origin, m_upperleftcorner + s*m_horizontal - t*m_vertical - m_origin);
+		ray get_ray(double s, double t) {
+			return ray(m_origin, m_upperleftcorner + s*m_horizontal + t*m_vertical - m_origin);
 		}
 
-		void setPosition(const vec3& pos) { 
+		// camera coordinate system
+		vec3  get_position()           { return m_origin;          }
+		vec3  get_image_plane_origin() { return m_upperleftcorner; }
+		vec3  get_image_plane_xaxis()  { return m_horizontal;      }
+		vec3  get_image_plane_yaxis()  { return m_vertical;        }
+		float get_image_plane_width()  { return 2*m_halfwidth;     }
+		float get_image_plane_height() { return 2*m_halfheight;    }
+
+		void set_position(const vec3& pos) { 
 			m_pos = pos;
 			calculate_coordinate_system();
 		}
-		void setLookat(const vec3& lookat) {
+		void set_lookat(const vec3& lookat) {
 			m_lookat = lookat;
 			calculate_coordinate_system();
 		}
@@ -57,8 +65,8 @@ namespace rt {
 
 			m_origin = m_pos;
 			m_upperleftcorner = m_origin - m_halfwidth * m_u + m_halfheight * m_v - m_w;
-			m_horizontal = 2 * m_halfwidth  * m_u;
-			m_vertical = 2 * m_halfheight * m_v;
+			m_horizontal = 2.0 * m_halfwidth  * m_u;
+			m_vertical = -2.0 * m_halfheight * m_v;
 		}
 	};
 }

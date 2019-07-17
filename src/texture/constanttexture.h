@@ -16,17 +16,13 @@ namespace rt {
 		 * @param p - local position of the intersection point
 		 * @return color value for the position (u,v)
 		 */
-		vec3 value(float u, float v, const vec3& p) const override {
-			return m_color;
-		}
+		vec3 value(float u, float v, const vec3& p) const override;
 
 	private:
 		vec3 m_color;
 	};
 
-	std::shared_ptr<ConstantTexture> create_color(const vec3& color) {
-		return std::make_shared<ConstantTexture>(color);
-	}
+	std::shared_ptr<ConstantTexture> create_color(const vec3& color);
 }
 
 #endif//CONSTANT_TEXTURE_H

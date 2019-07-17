@@ -2,6 +2,7 @@
 #define OBJECT_H
 
 #include "cube.h"
+#include "cylinder.h"
 #include "mesh.h"
 #include "rectangle.h"
 #include "sphere.h"

@@ -46,7 +46,7 @@ rt::vec3& rt::vec3::operator/=(const double t) {
 //-----------------------------------------------------------------------------//
 
 double rt::vec3::length() const {
-	return sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]); 
+	return std::sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]); 
 }
 double rt::vec3::length2() const {
 	return e[0] * e[0] + e[1] * e[1] + e[2] * e[2]; 
@@ -156,4 +156,7 @@ rt::vec3 rt::max(const rt::vec3& v1, const rt::vec3& v2) {
 	float y = std::max(v1.y, v2.y);
 	float z = std::max(v1.z, v2.z);
 	return rt::vec3(x, y, z);
+}
+rt::vec3 rt::sqrt(const vec3& v) {
+	return vec3(std::sqrt(v.x), std::sqrt(v.y), std::sqrt(v.z));
 }

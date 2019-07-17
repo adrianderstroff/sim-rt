@@ -144,6 +144,11 @@ namespace rt {
 	 * returns the componentwise maxima of two vectors v1 and v2
 	 */
 	vec3 max(const vec3& v1, const vec3& v2);
+	/**
+	 * performs a component wise square root
+	 * with regards to t with the formula (1-t)*v1 + t*v2
+	 */
+	vec3 sqrt(const vec3& v);
 }
 
 #endif//VEC3_H

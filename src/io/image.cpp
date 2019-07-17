@@ -15,9 +15,9 @@ size_t rt::Image::index(size_t x, size_t y) const {
 
 void rt::Image::set(size_t x, size_t y, const vec3& col) {
 	size_t idx = index(x, y);
-    m_data.at(idx+0) = char(255.99*col.r);
-    m_data.at(idx+1) = char(255.99*col.g);
-    m_data.at(idx+2) = char(255.99*col.b);
+    m_data.at(idx+0) = static_cast<unsigned char>(255.99*col.r);
+    m_data.at(idx+1) = static_cast<unsigned char>(255.99*col.g);
+    m_data.at(idx+2) = static_cast<unsigned char>(255.99*col.b);
 }
 
 rt::vec3 rt::Image::get(size_t x, size_t y) const {
@@ -27,6 +27,19 @@ rt::vec3 rt::Image::get(size_t x, size_t y) const {
 	float b = static_cast<float>(m_data.at(idx + 2)) / 255.f;
 
 	return vec3(r, g, b);
+}
+
+void rt::Image::clear(const vec3& col) {
+	unsigned char r = static_cast<unsigned char>(255.99 * col.r);
+	unsigned char g = static_cast<unsigned char>(255.99 * col.g);
+	unsigned char b = static_cast<unsigned char>(255.99 * col.b);
+
+	size_t size = m_width * m_height * m_channels;
+	for (size_t i = 2; i < size; i+=3) {
+		m_data[i - 2] = r;
+		m_data[i - 1] = g;
+		m_data[i - 0] = b;
+	}
 }
 
 void rt::Image::inv_gamma() {

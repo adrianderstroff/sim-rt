@@ -73,9 +73,10 @@ bool rt::BVH::hit_node(const ray& r, const std::shared_ptr<Node> node, double tm
 		if (node->left == nullptr) {
 			// check all children and find closest hit
 			HitRecord temprec;
+			float mint = FLT_MAX;
 			for (auto h : node->data) {
-				if (h->hit(r, tmin, tmax, temprec)) {
-					tmax = temprec.t;
+				if (h->hit(r, tmin, tmax, temprec) && temprec.t < mint) {
+					mint = temprec.t;
 					rec = temprec;
 					anyhit = true;
 				}

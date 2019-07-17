@@ -53,6 +53,11 @@ namespace rt {
 		 * @return col at (x,y)
 		 */
 		vec3 get(size_t x, size_t y) const;
+		/**
+		 * clears all pixels with the specified color
+		 * @param col - clear color
+		 */
+		void clear(const vec3& col);
 
 		/**
 		 * writes current image data to file

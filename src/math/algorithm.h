@@ -19,6 +19,16 @@ namespace rt {
 	 * @return specular reflection coefficient
 	 */
 	double schlick(double cosine, double refractionIdx);
+
+	/**
+	 * checks if val is in the range ]vmin, vmax[
+	 * @param val - the value to test for
+	 * @param vmin - the lower bound
+	 * @param vmax - the upper bound
+	 * @return true if val is in the range ]vmin, vmax[
+	 * and false otherwise
+	 */
+	bool is_between(double val, double vmin, double vmax);
 }
 
 #endif//ALGORITHM_H

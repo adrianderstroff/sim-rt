@@ -8,7 +8,7 @@ bool rt::Sphere::hit(const ray& r, double tMin, double tMax, HitRecord& rec) con
 	double discriminant = b * b - a * c;
 
 	if (discriminant > 0) {
-		double temp = (-b - sqrt(b*b - a * c)) / a;
+		double temp = (-b - std::sqrt(b*b - a * c)) / a;
 		if (temp < tMax && temp > tMin) {
 			rec.t = temp;
 			rec.p = r.position(rec.t);
@@ -18,7 +18,7 @@ bool rt::Sphere::hit(const ray& r, double tMin, double tMax, HitRecord& rec) con
 			rec.lp = rec.p - center;
 			return true;
 		}
-		temp = (-b + sqrt(b*b - a * c)) / a;
+		temp = (-b + std::sqrt(b*b - a * c)) / a;
 		if (temp < tMax && temp > tMin) {
 			rec.t = temp;
 			rec.p = r.position(rec.t);

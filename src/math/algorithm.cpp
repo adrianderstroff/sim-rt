@@ -9,3 +9,7 @@ double rt::schlick(double cosine, double refractionIdx) {
 	r0 = r0 * r0;
 	return r0 + (1 - r0)*pow(1 - cosine, 5);
 }
+
+bool rt::is_between(double val, double vmin, double vmax) {
+	return vmin < val && val < vmax;
+}
