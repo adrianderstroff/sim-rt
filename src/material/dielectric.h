@@ -8,7 +8,7 @@
 namespace rt {
 	class Dielectric : public IMaterial {
 	public:
-		Dielectric(float ri, std::shared_ptr<ITexture> texture = create_color(vec3(1))) 
+		Dielectric(float ri, std::shared_ptr<ITexture> texture = new_color(vec3(1)))
 			: m_refractionidx(ri), m_texture(texture) {}
 
 		virtual bool scatter(const ray& rIn, const HitRecord& rec, vec3& attenuation, ray& scattered) const {

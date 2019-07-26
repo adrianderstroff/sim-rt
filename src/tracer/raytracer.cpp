@@ -1,6 +1,6 @@
 #include "raytracer.h"
 
-rt::Raytracer::Raytracer(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth)
+rt::Raytracer::Raytracer(size_t width, size_t height, size_t samples, size_t maxdepth)
 	: m_width(width), m_height(height), m_samples(samples), m_maxdepth(maxdepth), m_backgroundcolor(0, 0, 0) {
 	m_image = Image(width, height, 3);
 }
@@ -29,14 +29,14 @@ void rt::Raytracer::run() {
 	auto starttime = std::chrono::high_resolution_clock::now();
 
 	// iterate over all pixels
-	int size = m_width * m_height;
+	size_t size = m_width * m_height;
 	for (size_t i = 0; i < size; ++i) {
 		// print progress
 		console::progress("raytracing", static_cast<double>(i) / static_cast<double>(size - 1));
 
 		// determine x and y index
-		unsigned int x = i % m_width;
-		unsigned int y = i / m_width;
+		size_t x = i % m_width;
+		size_t y = i / m_width;
 
 		// aggregate color for each sample
 		vec3 col(0, 0, 0);

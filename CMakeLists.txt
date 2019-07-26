@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 2.8.11)
-project(SimRt)
+
+set(PROJECT_NAME sim-rt)
+
+project(${PROJECT_NAME})
 
 # enable c++17 features
 set(CMAKE_CXX_STANDARD 17)
@@ -22,10 +25,14 @@ file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h)
 # stb
 file(GLOB STB_INCLUDE ${EXTERNAL_DIR}/stb/*.h)
 
+# peglib
+file(GLOB PEG_INCLUDE ${EXTERNAL_DIR}/peglib/*.h)
+
 # include directories
 include_directories(
     ${SRC_DIR}
     ${EXTERNAL_DIR}/stb
+	${EXTERNAL_DIR}/peglib
 )
 
 # keep folder structure in visual studio
@@ -43,6 +50,8 @@ function(assign_source_group)
 endfunction(assign_source_group)
 if(MSVC)
 assign_source_group(${SRC_FILES})
+assign_source_group(${STB_INCLUDE})
+assign_source_group(${PEG_INCLUDE})
 endif(MSVC)
 
-add_executable(Raytracing ${SRC_FILES} ${STB_INCLUDE})
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${STB_INCLUDE} ${PEG_INCLUDE})

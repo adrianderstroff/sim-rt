@@ -38,7 +38,7 @@ std::shared_ptr<rt::BVH::Node> rt::BVH::create_node(std::vector<std::shared_ptr<
 		vec3 axis = (dim.x > dim.y) ? ((dim.x > dim.z) ? dx : dz) : ((dim.y > dim.z) ? dy : dz);
 
 		// calculate center point along axis
-		float center = dot(surroundingbox.center(), axis);
+		double center = dot(surroundingbox.center(), axis);
 
 		// partition children based on the axis
 		std::vector<std::shared_ptr<IHitable>> leftdata;
@@ -46,14 +46,14 @@ std::shared_ptr<rt::BVH::Node> rt::BVH::create_node(std::vector<std::shared_ptr<
 		for (auto h : hitables) {
 			aabb box;
 			if (h->boundingbox(box)) {
-				float hcenter = dot(box.center(), axis);
+				double hcenter = dot(box.center(), axis);
 				if (hcenter < center) leftdata.push_back(h);
 				else                  rightdata.push_back(h);
 			}
 		}
 
 		// recursively create the hierarchy
-		size_t newdepth = ++depth;
+		size_t newdepth = depth+1;
 		node->left = create_node(leftdata, newdepth);
 		node->right = create_node(rightdata, newdepth);
 	}
@@ -73,7 +73,7 @@ bool rt::BVH::hit_node(const ray& r, const std::shared_ptr<Node> node, double tm
 		if (node->left == nullptr) {
 			// check all children and find closest hit
 			HitRecord temprec;
-			float mint = FLT_MAX;
+			double mint = DBL_MAX;
 			for (auto h : node->data) {
 				if (h->hit(r, tmin, tmax, temprec) && temprec.t < mint) {
 					mint = temprec.t;
@@ -85,8 +85,8 @@ bool rt::BVH::hit_node(const ray& r, const std::shared_ptr<Node> node, double tm
 		else {
 			// collect hit record of left and right children
 			HitRecord recordleft, recordright;
-			recordleft.t  = FLT_MAX;
-			recordright.t = FLT_MAX;
+			recordleft.t  = DBL_MAX;
+			recordright.t = DBL_MAX;
 
 			// check children recursively
 			bool hitleft  = hit_node(r, node->left, tmin, tmax, recordleft);

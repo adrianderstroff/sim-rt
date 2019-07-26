@@ -1,18 +1,28 @@
 #include "debugtracer.h"
 
-rt::Debugtracer::Debugtracer(Resolution r, Samples s, TraceDepth t) : m_backgroundcolor(0, 0, 0) {
+rt::Debugtracer::Debugtracer(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth)
+	: m_backgroundcolor(0, 0, 0), m_width(width), m_height(height), m_samples(samples), m_maxdepth(maxdepth), m_debugmode(DebugMode::LINES),
+	  m_linewidth(0.001), m_pointsize(0.01), m_renderer_width(width), m_renderer_height(height), m_renderer_samples(samples) {
+	m_raycaster = Raycaster(width, height, samples, 1);
+}
+
+rt::Debugtracer::Debugtracer(Resolution r, Samples s, TraceDepth t) 
+	: m_backgroundcolor(0, 0, 0), m_debugmode(DebugMode::LINES), m_linewidth(0.001), m_pointsize(0.01) {
 	// determine resolution
 	auto [width, height] = determine_resolution(r);
 	m_width = width; m_height = height;
+	m_renderer_width = width;
+	m_renderer_height = height;
 
 	// determine number of samples
 	m_samples = determine_samples(s);
+	m_renderer_samples = m_samples;
 
 	// determine ray tracing depth
 	m_maxdepth = determine_trace_depth(t);
 
 	// setup raycaster
-	m_raycaster = Raytracer(Resolution::LOW, Samples::LOW, TraceDepth::LOW);
+	m_raycaster = Raycaster(r, s, TraceDepth::ONE);
 }
 
 void rt::Debugtracer::run() {
@@ -24,9 +34,7 @@ void rt::Debugtracer::run() {
 
 	// initialize scene 
 	std::shared_ptr<BVH> scene = std::make_shared<BVH>(2, 20);
-	// setup camera
-	auto bluematerial = std::make_shared<Lambertian>(create_color(vec3(0, 0, 1)));
-	scene->insert(std::make_shared<Sphere>(m_camera->get_position(), 0.25, bluematerial));
+	build_camera(scene);
 	build_bounds(scene);
 	build_ray_scene(scene);
 
@@ -41,10 +49,28 @@ void rt::Debugtracer::write(std::string filepath) const {
 	m_raycaster.write(filepath);
 }
 
+void rt::Debugtracer::build_camera(std::shared_ptr<BVH>& scene) {
+	auto cameramaterial = std::make_shared<Lambertian>(new_color(vec3(0, 0, 1)));
+
+	// camera is a sphere
+	scene->insert(std::make_shared<Sphere>(m_camera->get_position(), 5*m_pointsize, cameramaterial));
+
+	// camera image frame
+	vec3 origin = m_camera->get_image_plane_origin();
+	vec3 x = m_camera->get_image_plane_xaxis();
+	vec3 y = m_camera->get_image_plane_yaxis();
+
+
+	scene->insert(std::make_shared<Cylinder>(origin, origin + x, m_linewidth, cameramaterial));
+	scene->insert(std::make_shared<Cylinder>(origin + x, origin + x + y, m_linewidth, cameramaterial));
+	scene->insert(std::make_shared<Cylinder>(origin + x + y, origin + y, m_linewidth, cameramaterial));
+	scene->insert(std::make_shared<Cylinder>(origin + y, origin, m_linewidth, cameramaterial));
+}
+
 void rt::Debugtracer::build_bounds(std::shared_ptr<BVH>& scene) {
 	aabb bounds;
 	if (m_world->boundingbox(bounds)) {
-		auto whitematerial = std::make_shared<Lambertian>(create_color(vec3(1)));
+		auto linematerial = std::make_shared<Lambertian>(new_color(vec3(0)));
 
 		bounds.extend(m_camera->get_position());
 		vec3 dir = bounds.max() - bounds.min();
@@ -53,20 +79,22 @@ void rt::Debugtracer::build_bounds(std::shared_ptr<BVH>& scene) {
 		vec3 y = vec3(0, dir.y, 0);
 		vec3 z = vec3(0, 0, dir.z);
 
-		scene->insert(std::make_shared<Cylinder>(origin, origin+x, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + x, origin + x + y, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + x + y, origin + y, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + y, origin, 0.01, whitematerial));
+		float linewidth = 0.001;
 
-		scene->insert(std::make_shared<Cylinder>(origin + z, origin + z + x, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + z + x, origin + z + x + y, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + z + x + y, origin + z + y, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + z + y, origin + z, 0.01, whitematerial));
+		scene->insert(std::make_shared<Cylinder>(origin, origin+x, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + x, origin + x + y, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + x + y, origin + y, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + y, origin, linewidth, linematerial));
 
-		scene->insert(std::make_shared<Cylinder>(origin, origin + z, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + x, origin + x + z, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + x + y, origin + x + y + z, 0.01, whitematerial));
-		scene->insert(std::make_shared<Cylinder>(origin + y, origin + y + z, 0.01, whitematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + z, origin + z + x, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + z + x, origin + z + x + y, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + z + x + y, origin + z + y, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + z + y, origin + z, linewidth, linematerial));
+
+		scene->insert(std::make_shared<Cylinder>(origin, origin + z, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + x, origin + x + z, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + x + y, origin + x + y + z, linewidth, linematerial));
+		scene->insert(std::make_shared<Cylinder>(origin + y, origin + y + z, linewidth, linematerial));
 	}
 }
 
@@ -75,11 +103,11 @@ void rt::Debugtracer::build_ray_scene(std::shared_ptr<BVH>& scene) {
 	auto starttime = std::chrono::high_resolution_clock::now();
 
 	// setup red material
-	auto redmaterial = std::make_shared<Dielectric>(1.0, create_color(vec3(1, 0, 0)));
+	auto redmaterial = std::make_shared<Lambertian>(new_color(vec3(1, 0, 0)));
 
 	// calculate step
-	size_t stepx = m_width / 40;
-	size_t stepy = m_height / 40;
+	size_t stepx = m_width / 50;
+	size_t stepy = m_height / 50;
 
 	// iterate over all pixels
 	size_t size = m_width * m_height;
@@ -89,7 +117,7 @@ void rt::Debugtracer::build_ray_scene(std::shared_ptr<BVH>& scene) {
 			size_t i = x + y*m_width;
 			console::progress("build scene", static_cast<double>(i) / static_cast<double>(size - 1));
 
-			// aggregate color for each sample
+			// trace ray and store all of it's intersection points
 			for (size_t s = 0; s < m_samples; ++s) {
 				double u = static_cast<double>(x + drand()) / static_cast<double>(m_width);
 				double v = static_cast<double>(y + drand()) / static_cast<double>(m_height);
@@ -100,14 +128,23 @@ void rt::Debugtracer::build_ray_scene(std::shared_ptr<BVH>& scene) {
 				raypoints.push_back(r.o);
 				trace(r, raypoints, 0);
 
-				// create a cylinder for each track of the ray
+				// create debug primitives that will be visualized in the next step
 				for (size_t s = 1; s < raypoints.size(); ++s) {
-					scene->insert(std::make_shared<Cylinder>(raypoints.at(s - 1), raypoints.at(s), 0.001, redmaterial));
+					switch (m_debugmode) {
+					case DebugMode::LINES:
+						// create a cylinder for each track of the ray
+						scene->insert(std::make_shared<Cylinder>(raypoints.at(s - 1), raypoints.at(s), m_linewidth, redmaterial));
+						break;
+					case DebugMode::POINTS:
+						// create spheres for each ray intersection
+						scene->insert(std::make_shared<Sphere>(raypoints.at(s), m_pointsize, redmaterial));
+						break;
+					}
+					
 				}
 			}
 		}
 	}
-	console::progress("build scene", 1.0);
 
 	// build scene
 	scene->build();

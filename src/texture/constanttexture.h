@@ -22,7 +22,7 @@ namespace rt {
 		vec3 m_color;
 	};
 
-	std::shared_ptr<ConstantTexture> create_color(const vec3& color);
+	std::shared_ptr<ConstantTexture> new_color(const vec3& color);
 }
 
 #endif//CONSTANT_TEXTURE_H

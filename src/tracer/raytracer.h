@@ -13,7 +13,7 @@
 namespace rt {
 	class Raytracer : public ITracer {
 	public:
-		Raytracer(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth = 50);
+		Raytracer(size_t width, size_t height, size_t samples, size_t maxdepth = 50);
 		Raytracer(Resolution r = Resolution::MEDIUM, Samples s = Samples::MEDIUM, TraceDepth t = TraceDepth::MEDIUM);
 
 		void setHitable(std::shared_ptr<IHitable> h) override { m_world = h; }
@@ -29,7 +29,7 @@ namespace rt {
 		Image                     m_image;
 		std::shared_ptr<Camera>   m_camera;
 		std::shared_ptr<IHitable> m_world;
-		unsigned int              m_width, m_height, m_samples, m_maxdepth;
+		size_t                    m_width, m_height, m_samples, m_maxdepth;
 		vec3                      m_backgroundcolor;
 
 		vec3 trace(const ray& r, int depth) const;

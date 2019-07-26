@@ -32,6 +32,7 @@ namespace rt {
 	 * specifies the ray tracing depth
 	 */
 	enum class TraceDepth {
+		ONE,
 		LOW,
 		MEDIUM,
 		HIGH
@@ -82,6 +83,8 @@ namespace rt {
 	 */
 	inline size_t determine_trace_depth(TraceDepth tracedepth) {
 		switch (tracedepth) {
+		case TraceDepth::ONE:
+			return 1;
 		case TraceDepth::LOW:
 			return 10;
 		case TraceDepth::MEDIUM:
