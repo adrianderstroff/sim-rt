@@ -7,7 +7,6 @@ Cornell Box                                    | Material test                  
 :---------------------------------------------:|:--------------------------------:|:-------------------------------------:
 ![Cornell Box](github/cornell.png)             | ![Material](github/material.png) | ![Environment map](github/envmap.png)
 Meshs and instancing                           | Texture test                     | Debug rays
-:---------------------------------------------:|:--------------------------------:|:-------------------------------------:
 ![Mesh Instancing](github/mesh-instancing.png) | ![Texture](github/texture.png)   | ![Debug rays](github/debug.png)
 
 
