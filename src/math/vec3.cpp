@@ -89,7 +89,7 @@ rt::vec3 rt::operator*(const rt::vec3 &v, double t) {
 //-----------------------------------------------------------------------------//
 
 std::ostream& rt::operator<<(std::ostream& os, const rt::vec3& v) {
-	os << "(" << v.x << "," << v.y << "," << v.z << ")" << std::endl;
+	os << "(" << v.x << "," << v.y << "," << v.z << ")";
 	return os;
 }
 

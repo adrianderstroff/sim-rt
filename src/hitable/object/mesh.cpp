@@ -92,7 +92,8 @@ std::shared_ptr<rt::Mesh> rt::load_mesh(std::string filename, std::shared_ptr<IM
 		}
 		*/
 		else if (tokens.at(0) == "f") {
-			for (size_t i = 1; i < tokens.size(); ++i) {
+			size_t len = std::min(tokens.size(), size_t{4});
+			for (size_t i = 1; i < len; ++i) {
 				std::vector<std::string> vindices = split(tokens.at(i), '/');
 
 				// we are only interested in the first index

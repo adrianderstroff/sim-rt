@@ -2,6 +2,15 @@
 
 Simple Ray tracing framework ***Sim Rt*** is based on the mini-book series of ***Peter Shirley*** that can be found on his [github](https://github.com/petershirley). It's a hobby project to learn about the basics of CPU Ray tracing and modern C++17.
 
+## Results
+Cornell Box                                    | Material test                    | Environment map
+:---------------------------------------------:|:--------------------------------:|:-------------------------------------:
+![Cornell Box](github/cornell.png)             | ![Material](github/material.png) | ![Environment map](github/envmap.png)
+Meshs and instancing                           | Texture test                     | Debug rays
+:---------------------------------------------:|:--------------------------------:|:-------------------------------------:
+![Mesh Instancing](github/mesh-instancing.png) | ![Texture](github/texture.png)   | ![Debug rays](github/debug.png)
+
+
 ## Topics
 
 This sections covers algorithms and techniques that might be implemented in the future.

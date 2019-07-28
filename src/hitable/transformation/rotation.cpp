@@ -2,8 +2,8 @@
 
 rt::Rotation::Rotation(std::shared_ptr<IHitable> hitable, const vec3& axis, float angle) 
 	: m_hitable(hitable), m_axis(axis), m_theta(angle * DEG_TO_RAD) {
-	aabb m_bounds, newbounds;
-	m_hasbounds = m_hitable->boundingbox(m_bounds);
+	aabb bounds, newbounds;
+	m_hasbounds = m_hitable->boundingbox(bounds);
 
 	// get all 8 points of the bounding box and rotate them
 	// use the rotated points to create a new bounding box
@@ -11,7 +11,7 @@ rt::Rotation::Rotation(std::shared_ptr<IHitable> hitable, const vec3& axis, floa
 		for (size_t y = 0; y < 2; ++y) {
 			for (size_t x = 0; x < 2; ++x) {
 				vec3 alpha(x, y, z);
-				vec3 p = alpha * m_bounds.max() + (vec3(1) - alpha) * m_bounds.min();
+				vec3 p = alpha * bounds.max() + (vec3(1) - alpha) * bounds.min();
 
 				// rotate the point
 				vec3 np = rotate(p, m_theta);

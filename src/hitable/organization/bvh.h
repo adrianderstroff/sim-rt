@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "hitable/ihitable.h"
+#include "io/console.h"
 
 namespace rt {
 class BVH : public IHitable {
@@ -22,8 +23,8 @@ public:
 	void insert_all(std::vector<std::shared_ptr<IHitable>> hitables);
 	void build();
 
-	virtual bool hit(const ray& r, double tMin, double tMax, HitRecord& rec) const;
-	virtual bool boundingbox(aabb& box) const;
+	virtual bool hit(const ray& r, double tMin, double tMax, HitRecord& rec) const override;
+	virtual bool boundingbox(aabb& box) const override;
 
 private:
 	size_t m_maxleafsize, m_maxrecursiondepth;
