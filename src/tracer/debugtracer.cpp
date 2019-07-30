@@ -186,7 +186,7 @@ void rt::Debugtracer::setup_render_camera() {
 		// set actual camera
 		vec3 pos = center + extent * dir;
 		vec3 lookat = center;
-		m_rendercamera = std::make_shared<Camera>(pos, lookat, vec3(0, 1, 0), 45.0, aspect());
+		m_rendercamera = std::make_shared<SimpleCamera>(pos, lookat, vec3(0, 1, 0), 45.0, aspect());
 	}
 	else {
 		m_rendercamera = m_camera;

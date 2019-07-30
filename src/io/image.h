@@ -38,6 +38,11 @@ namespace rt {
 		 * @return number of color channels
 		 */
 		size_t channels() const;
+		/**
+		 * returns the raw data
+		 * @return raw data
+		 */
+		const std::vector<unsigned char>& data() const;
 
 		/**
 		 * sets pixel color at position (x,y)
@@ -58,18 +63,6 @@ namespace rt {
 		 * @param col - clear color
 		 */
 		void clear(const vec3& col);
-
-		/**
-		 * writes current image data to file
-		 * @param filename - path to png image file
-		 */
-		void write(std::string filename) const;
-		/**
-		 * reads in the file and updates image dimensions and data
-		 * @param filename - path to a png image file
-		 * @return true if loading was successful, false otherwise
-		 */
-		bool read(std::string filename);
 
 	private:
 		size_t m_width;
@@ -92,6 +85,18 @@ namespace rt {
 		 */
 		void inv_gamma();
 	};
+
+	/**
+	 * writes current image data to file
+	 * @param filename - path to png image file
+	 */
+	void write_image(std::string filename, const Image& image);
+	/**
+	 * reads in the file and updates image dimensions and data
+	 * @param filename - path to a png image file
+	 * @return image if loading was successful, nullptr otherwise
+	 */
+	std::pair<Image, bool> read_image(std::string filename);
 }
 
 #endif//IMAGE_H

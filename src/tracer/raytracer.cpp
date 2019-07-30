@@ -62,7 +62,7 @@ void rt::Raytracer::run() {
 }
 
 void rt::Raytracer::write(std::string filepath) const {
-	m_image.write(filepath);
+	write_image(filepath, m_image);
 }
 
 rt::vec3 rt::Raytracer::trace(const ray& r, int depth) const {

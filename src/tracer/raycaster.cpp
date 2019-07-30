@@ -62,7 +62,7 @@ void rt::Raycaster::run() {
 }
 
 void rt::Raycaster::write(std::string filepath) const {
-	m_image.write(filepath);
+	write_image(filepath, m_image);
 }
 
 rt::vec3 rt::Raycaster::trace(const ray& r) const {

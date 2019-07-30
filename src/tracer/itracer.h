@@ -107,7 +107,7 @@ namespace rt {
 		 * setter for the camera to use for tracing
 		 * @param camera - camera to trace rays from
 		 */
-		virtual void setCamera(std::shared_ptr<Camera> cam) = 0;
+		virtual void setCamera(std::shared_ptr<ICamera> cam) = 0;
 		/**
 		 * setter for the color of the background
 		 * @param color - color of the background

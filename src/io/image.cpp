@@ -8,6 +8,7 @@
 size_t rt::Image::width()    const { return m_width;    }
 size_t rt::Image::height()   const { return m_height;   }
 size_t rt::Image::channels() const { return m_channels; }
+const std::vector<unsigned char>& rt::Image::data() const { return m_data; }
 
 size_t rt::Image::index(size_t x, size_t y) const {
 	return (x + y*m_width)*m_channels;
@@ -54,44 +55,44 @@ void rt::Image::inv_gamma() {
 	}
 }
 
-void rt::Image::write(std::string filename) const {
-    stbi_write_png(filename.c_str(), m_width, m_height, m_channels, m_data.data(), 0);
+void rt::write_image(std::string filename, const Image& image) {
+    stbi_write_png(filename.c_str(), image.width(), image.height(), image.channels(), image.data().data(), 0);
 }
 
-bool rt::Image::read(std::string filename) {
+std::pair<rt::Image, bool> rt::read_image(std::string filename) {
 	// load data
 	int tempwidth, tempheight, tempchannels;
 	unsigned char* data = stbi_load(filename.c_str(), &tempwidth, &tempheight, &tempchannels, 3);
 	
-	// set image dimensions
-	m_width = tempwidth;
-	m_height = tempheight;
-	m_channels = tempchannels;
-	
 	// adapt channels if number of channels is not 3
 	if (tempchannels != 3) {
 		console::print("Channels is not 3");
-		m_channels = 3;
+		tempchannels = 3;
 	}
 
 	// error handling
-	if (data == nullptr) return false;
+	if (data == nullptr) return std::make_pair(Image(), false);
+
+	// create image
+	Image image(tempwidth, tempheight, tempchannels);
 
 	// convert data to float in the range [0,1]
-	m_data.resize(m_width*m_height*m_channels);
-	for (size_t y = 0; y < m_height; ++y) {
-		for (size_t x = 0; x < m_width; ++x) {
-			size_t idx = index(x, y);
-			for (size_t c = 0; c < m_channels; ++c) {
-				m_data.at(idx + c) = data[idx + c];
-			}
+	for (size_t y = 0; y < tempheight; ++y) {
+		for (size_t x = 0; x < tempwidth; ++x) {
+			// determine index
+			size_t idx = (x + y * tempwidth) * tempchannels;
+			// normalize values
+			double r = data[idx + 0] / 255.0;
+			double g = data[idx + 1] / 255.0;
+			double b = data[idx + 2] / 255.0;
+			vec3 col(r*r, g*g, b*b);
+			// inverse gamma
+			image.set(x, y, col);
 		}
 	}
-
-	inv_gamma();
 
 	// release data
 	stbi_image_free(data);
 
-	return true;
+	return std::make_pair(image, true);
 }
