@@ -8,6 +8,7 @@
 #include "tracer/tracer.h"
 #include "hitable/hitable.h"
 #include "io/image.h"
+#include "io/sceneio.h"
 #include "material/material.h"
 #include "math/constants.h"
 #include "texture/texture.h"
@@ -110,7 +111,7 @@ void env_images() {
 }
 
 int main() {
-	env_images();
+	read_scene("./image/cornell2.ssf");
 
     return 0;
 }
