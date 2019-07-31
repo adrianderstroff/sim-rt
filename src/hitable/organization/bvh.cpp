@@ -8,6 +8,9 @@ void rt::BVH::insert_all(std::vector<std::shared_ptr<IHitable>> hitables) {
 }
 
 void rt::BVH::build() {
+	// do nothing when bvh is empty
+	if (m_hitables.size() == 0) return;
+
 	m_root = create_node(m_hitables, 0);
 }
 

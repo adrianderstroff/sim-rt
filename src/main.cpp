@@ -111,7 +111,9 @@ void env_images() {
 }
 
 int main() {
-	read_scene("./image/cornell2.ssf");
+	auto scene = read_scene("./image/cornell2.ssf");
+	scene->tracer->run();
+	scene->tracer->write("./image/test.png");
 
     return 0;
 }
