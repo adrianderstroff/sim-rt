@@ -28,6 +28,46 @@ namespace rt {
 		std::string type; 
 		int width, height, samples, depth; 
 	};
+	enum TracerType {
+		RAYCASTER,
+		RAYTRACER,
+		DEBUGTRACER
+	};
+	enum TracerAttribute {
+		TRACER_TYPE,
+		TRACER_RESOLUTION,
+		TRACER_SAMPLES,
+		TRACER_DEPTH
+	};
+	enum CameraType {
+		SIMPLE_CAMERA,
+		DOF_CAMERA
+	};
+	enum CameraAttribute {
+		CAMERA_TYPE,
+		CAMERA_POS,
+		CAMERA_LOOKAT,
+		CAMERA_UP,
+		CAMERA_FOV,
+		CAMERA_APERTURE
+	};
+	enum MaterialType {
+		MATERIAL_NORMAL,
+		MATERIAL_LAMBERTIAN,
+		MATERIAL_METAL,
+		MATERIAL_DIELECTRIC,
+		MATERIAL_DIFFUSE_LIGHT,
+		MATERIAL_ISOTROPIC
+	};
+	enum MaterialAttribute {
+		MATERIAL_TYPE,
+		MATERIAL_NAME,
+		MATERIAL_COLOR,
+		MATERIAL_TEX_PATH,
+		MATERIAL_TEX_INTERPOLATION,
+		MATERIAL_TEX_WRAP,
+		MATERIAL_REFRACTION_COEFF
+	};
 
 	struct CameraObj { 
 		std::string type; 
@@ -62,13 +102,30 @@ namespace rt {
 
 	std::shared_ptr<SceneData> read_scene(std::string scenepath);
 
-	void create_tracer(std::shared_ptr<SceneData>& scene, TracerObj& tracerobj);
-	void create_camera(std::shared_ptr<SceneData>& scene, CameraObj& cameraobj);
 	void create_materials(std::shared_ptr<SceneData>& scene, std::map<std::string, MaterialObj>& materialmap);
 	void create_objects(std::shared_ptr<SceneData>& scene, std::map<std::string, ObjectObj>& objectmap);
 	void create_scene(std::shared_ptr<SceneData>& scene, std::string scenetype, std::map<std::string, SceneElement>& elementmap);
 
 	bool has_option(std::map<std::string, std::string>& options, std::string findoption);
+	
+	template <typename T, typename S>
+	inline bool map_contains(std::map<T, S>& m, T elem) {
+		return m.find(elem) != m.end();
+	}
+	template <typename T, typename S, typename R>
+	inline R map_get(std::map<T, S>& m, T el, R default) {
+		if (map_contains(m, el)) {
+			return m.at(el).get<R>();
+		}
+		return default;
+	}
+	template <typename T, typename S>
+	inline void map_fill(std::map<T, S>& m, const peg::SemanticValues& sv) {
+		for (size_t i = 0; i < sv.size(); ++i) {
+			auto& val = sv[i].get<std::pair<T, S>>();
+			m.insert(val);
+		}
+	}
 
 	std::shared_ptr<ITexture> create_texture(MaterialObj& materialobj);
 	std::shared_ptr<IMaterial> grab_material(std::shared_ptr<SceneData>& scene, std::string materialid);

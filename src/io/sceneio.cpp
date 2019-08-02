@@ -20,13 +20,14 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		TracerDepth   <- 'DEPTH' _ Number
 
 		# camera statements
-		Camera        <- 'CAMERA' (_ CameraAttrib)* 
-		CameraAttrib  <- CameraType / CameraPos / CameraLookAt / CameraUp / CameraFOV
-		CameraType    <- 'TYPE' _ Word
-		CameraPos     <- 'POS' _ Vector
-		CameraLookAt  <- 'LOOKAT' _ Vector
-		CameraUp      <- 'UP' _ Vector
-		CameraFOV	  <- 'FOV' _ Double
+		Camera         <- 'CAMERA' (_ CameraAttrib)* 
+		CameraAttrib   <- CameraType / CameraPos / CameraLookAt / CameraUp / CameraFOV
+		CameraType     <- 'TYPE' _ Word
+		CameraPos      <- 'POS' _ Vector
+		CameraLookAt   <- 'LOOKAT' _ Vector
+		CameraUp       <- 'UP' _ Vector
+		CameraFOV	   <- 'FOV' _ Double
+		CameraAperture <- 'Aperture' _ Double
 
 		# materials statement
 		Materials          <- 'MATERIALS' (_ Material)*
@@ -85,29 +86,26 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 	assert(ok);
 
 
+	// setup scene
+	std::shared_ptr<SceneData> scene = std::make_shared<SceneData>();
+
 
 	/**
 	 * define general parser rules
 	 */
-	parser["Comment"] = [](const peg::SemanticValues& sv) {
-		std::cout << "Comment: '" << sv.token()  << "'" << std::endl;
-	};
-	parser["EOL"] = [](const peg::SemanticValues& sv) {
-		std::cout << "EOL: '" << sv.token() << "'" << std::endl;
-	};
-	parser["Word"] = [](const peg::SemanticValues& sv) -> std::string {
+	parser["Word"] = [](const peg::SemanticValues& sv) {
 		return sv.token();
 	};
-	parser["Path"] = [](const peg::SemanticValues& sv) -> std::string {
+	parser["Path"] = [](const peg::SemanticValues& sv) {
 		return sv.token();
 	};
-	parser["Number"] = [](const peg::SemanticValues& sv) -> int {
+	parser["Number"] = [](const peg::SemanticValues& sv) {
 		return stoi(sv.token());
 	};
-	parser["Double"] = [](const peg::SemanticValues& sv) -> double {
+	parser["Double"] = [](const peg::SemanticValues& sv) {
 		return stod(sv.token());
 	};
-	parser["Vector"] = [](const peg::SemanticValues& sv) -> vec3 {
+	parser["Vector"] = [](const peg::SemanticValues& sv) {
 		double x = sv[0].get<double>();
 		double y = sv[1].get<double>();
 		double z = sv[2].get<double>();
@@ -117,76 +115,254 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 	/**
 	 * building the tracer object
 	 */
-	TracerObj tracerobj{ "raycaster", 640, 480, 100, 100 };
-	parser["TracerType"] = [&](const peg::SemanticValues& sv) {
-		tracerobj.type = sv[0].get<std::string>();
+	parser["Tracer"] = [&](const peg::SemanticValues& sv) {
+		// collect attributes
+		std::map<TracerAttribute, peg::any> attributemap;
+		map_fill(attributemap, sv);
+
+		// grab common tracer attributes
+		TracerType type       = map_get(attributemap, TRACER_TYPE,       RAYCASTER          );
+		auto& [width, height] = map_get(attributemap, TRACER_RESOLUTION, std::pair(640, 460));
+		int samples           = map_get(attributemap, TRACER_SAMPLES,    100                );
+		int depth             = map_get(attributemap, TRACER_DEPTH,      100                );
+
+		// create the appropriate tracer
+		switch (type) {
+		case TracerType::RAYCASTER:
+			scene->tracer = std::make_shared<Raycaster>(width, height, samples, depth);
+			break;
+		case TracerType::RAYTRACER:
+			scene->tracer = std::make_shared<Raytracer>(width, height, samples, depth);
+			break;
+		case TracerType::DEBUGTRACER:
+			scene->tracer = std::make_shared<Debugtracer>(width, height, samples, depth);
+			break;
+		default: // raycaster
+			scene->tracer = std::make_shared<Raycaster>(width, height, samples, depth);
+			break;
+		}
 	};
-	parser["TracerRes"] = [&](const peg::SemanticValues& sv) {
-		tracerobj.width  = sv[0].get<int>();
-		tracerobj.height = sv[1].get<int>();
+	parser["TracerType"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string val = sv[0].get<std::string>();
+		
+		// determine tracer type
+		TracerType type = TracerType::RAYCASTER;
+		if     (val == "raycaster"  ) type = TracerType::RAYCASTER;
+		else if(val == "raytracer"  ) type = TracerType::RAYTRACER;
+		else if(val == "debugtracer") type = TracerType::DEBUGTRACER;
+
+		return std::pair(TRACER_TYPE, peg::any(type));
 	};
-	parser["TracerSamples"] = [&](const peg::SemanticValues& sv) {
-		tracerobj.samples = sv[0].get<int>();
+	parser["TracerRes"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		int width  = sv[0].get<int>();
+		int height = sv[1].get<int>();
+		std::pair resolution(width, height);
+
+		return std::pair(TRACER_RESOLUTION, peg::any(resolution));
 	};
-	parser["TracerDepth"] = [&](const peg::SemanticValues& sv) {
-		tracerobj.depth = sv[0].get<int>();
+	parser["TracerSamples"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		int samples = sv[0].get<int>();
+
+		return std::pair(TRACER_SAMPLES, peg::any(samples));
+	};
+	parser["TracerDepth"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		int depth = sv[0].get<int>();
+
+		return std::pair(TRACER_DEPTH, peg::any(depth));
 	};
 
 	/**
 	 * building the camera object
 	 */
-	CameraObj cameraobj{ "simple", vec3(0,0,1), vec3(0), vec3(0,1,0), 45.0 };
-	parser["CameraType"] = [&](const peg::SemanticValues& sv) {
-		cameraobj.type = sv[0].get<std::string>();
+	parser["Camera"] = [&](const peg::SemanticValues& sv) {
+		// collect attributes
+		std::map<CameraAttribute, peg::any> attributemap;
+		map_fill(attributemap, sv);
+
+		// grab common tracer attributes
+		CameraType type = map_get(attributemap, CAMERA_TYPE,     SIMPLE_CAMERA);
+		vec3 pos        = map_get(attributemap, CAMERA_POS,      vec3(0, 0, 1));
+		vec3 lookat     = map_get(attributemap, CAMERA_LOOKAT,   vec3(0, 0, 0));
+		vec3 up         = map_get(attributemap, CAMERA_UP,       vec3(0, 1, 0));
+		double fov      = map_get(attributemap, CAMERA_FOV,      45.0         );
+		double aperture = map_get(attributemap, CAMERA_APERTURE, 1.0          );
+		double aspect   = scene->tracer->aspect();
+
+		// create the appropriate tracer
+		switch (type) {
+		case CameraType::SIMPLE_CAMERA:
+			scene->camera = std::make_shared<SimpleCamera>(pos, lookat, up, fov, aspect);
+			break;
+		case CameraType::DOF_CAMERA:
+			scene->camera = std::make_shared<DOFCamera>(pos, lookat, up, fov, aspect, aperture);
+			break;
+		default: // simple camera
+			scene->camera = std::make_shared<SimpleCamera>(pos, lookat, up, fov, aspect);
+			break;
+		}
 	};
-	parser["CameraPos"] = [&](const peg::SemanticValues& sv) {
-		cameraobj.pos = sv[0].get<vec3>();
+	parser["CameraType"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string val = sv[0].get<std::string>();
+
+		// determine camera type
+		CameraType type = SIMPLE_CAMERA;
+		if      (val == "simple") type = SIMPLE_CAMERA;
+		else if (val == "dof"   ) type = DOF_CAMERA;
+
+		return std::make_pair(CAMERA_TYPE, peg::any(type));
 	};
-	parser["CameraLookAt"] = [&](const peg::SemanticValues& sv) {
-		cameraobj.lookat = sv[0].get<vec3>();
+	parser["CameraPos"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		vec3 pos = sv[0].get<vec3>();
+
+		return std::make_pair(CAMERA_POS, peg::any(pos));
 	};
-	parser["CameraUp"] = [&](const peg::SemanticValues& sv) {
-		cameraobj.up = sv[0].get<vec3>();
+	parser["CameraLookAt"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		vec3 lookat = sv[0].get<vec3>();
+
+		return std::make_pair(CAMERA_LOOKAT, peg::any(lookat));
 	};
-	parser["CameraFOV"] = [&](const peg::SemanticValues& sv) {
-		cameraobj.fov = sv[0].get<double>();
+	parser["CameraUp"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		vec3 up = sv[0].get<vec3>();
+
+		return std::make_pair(CAMERA_UP, peg::any(up));
+	};
+	parser["CameraFOV"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		double fov = sv[0].get<double>();
+
+		return std::make_pair(CAMERA_POS, peg::any(fov));
+	};
+	parser["CameraAperture"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		double aperture = sv[0].get<double>();
+
+		return std::make_pair(CAMERA_APERTURE, peg::any(aperture));
 	};
 
 	/**
 	 * building the material list
 	 */
-	std::map<std::string, MaterialObj> materialmap;
-	MaterialObj currentMaterial{"normal", "unnamed0", vec3(1), std::map<std::string,std::string>()};
 	parser["Material"] = [&](const peg::SemanticValues& sv) {
-		// insert last material
-		materialmap.insert(std::make_pair(currentMaterial.name, currentMaterial));
-		// reset material
-		currentMaterial = MaterialObj{ "normal", "unnamed"+std::to_string(materialmap.size()), vec3(1), std::map<std::string,std::string>() };
+		// collect attributes
+		std::map<MaterialAttribute, peg::any> attributemap;
+		map_fill(attributemap, sv);
+
+		// grab common tracer attributes
+		MaterialType type = map_get(attributemap, MATERIAL_TYPE, MATERIAL_NORMAL);
+		std::string name = map_get(attributemap, MATERIAL_NAME, "unnamed" + std::to_string(scene->materials.size()));
+		vec3 color = map_get(attributemap, MATERIAL_COLOR, vec3(1));
+		std::string texpath = map_get(attributemap, MATERIAL_TEX_PATH, "");
+		std::shared_ptr<ITexture> tex = std::make_shared<ConstantTexture>(color);
+		if (!texpath.empty()) {
+			auto& [image, status] = read_image(texpath);
+			if (status) {
+				std::shared_ptr<ImageTexture> imagetex = std::make_shared<ImageTexture>(image);
+				ImageTexture::Interpolation interpolation = map_get(attributemap, MATERIAL_TEX_INTERPOLATION, ImageTexture::BILINEAR);
+				auto& [wrapx, wrapy] = map_get(attributemap, MATERIAL_TEX_WRAP, std::pair(ImageTexture::CLAMP, ImageTexture::CLAMP));
+				imagetex->set_interpolation_method(interpolation);
+				imagetex->set_wrap_method(wrapx, wrapy);
+				tex = imagetex;
+			}
+		}
+
+		// create the appropriate tracer
+		switch(type) {
+		case MaterialType::MATERIAL_NORMAL:
+			std::pair material(name, std::make_shared<NormalMaterial>());
+			scene->materials.insert(material);
+			break;
+		case MaterialType::MATERIAL_LAMBERTIAN:
+			std::pair material(name, std::make_shared<Lambertian>(tex));
+			scene->materials.insert(material);
+			break;
+		case MaterialType::MATERIAL_METAL:
+			std::pair material(name, std::make_shared<Metal>(tex));
+			scene->materials.insert(material);
+			break;
+		case MaterialType::MATERIAL_DIELECTRIC:
+			double coeff = map_get(attributemap, MATERIAL_REFRACTION_COEFF, 1.0);
+
+			std::pair material(name, std::make_shared<Dielectric>(coeff, tex));
+			scene->materials.insert(material);
+			break;
+		case MaterialType::MATERIAL_DIFFUSE_LIGHT:
+			std::pair material(name, std::make_shared<DiffuseLight>(tex));
+			scene->materials.insert(material);
+			break;
+		case MaterialType::MATERIAL_ISOTROPIC:
+			std::pair material(name, std::make_shared<Isotropic>(tex));
+			scene->materials.insert(material);
+			break;
+		default: // normal material
+			std::pair material(name, std::make_shared<NormalMaterial>());
+			scene->materials.insert(material);
+			break;
+		}
 	};
-	parser["MaterialName"] = [&](const peg::SemanticValues& sv) {
-		currentMaterial.name = sv[0].get<std::string>();
+	parser["MaterialName"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string name = sv[0].get<std::string>();
+
+		return std::make_pair(MATERIAL_NAME, peg::any(name));
 	};
-	parser["MaterialType"] = [&](const peg::SemanticValues& sv) {
-		currentMaterial.type = sv[0].get<std::string>();
+	parser["MaterialType"] = [](const peg::SemanticValues& sv) {
+		std::string val = sv[0].get<std::string>();
+
+		// determine camera type
+		MaterialType type = MATERIAL_NORMAL;
+		if      (val == "normal"      ) type = MATERIAL_NORMAL;
+		else if (val == "lambertian"  ) type = MATERIAL_LAMBERTIAN;
+		else if (val == "metal"       ) type = MATERIAL_METAL;
+		else if (val == "dielectric"  ) type = MATERIAL_DIELECTRIC;
+		else if (val == "diffuselight") type = MATERIAL_DIFFUSE_LIGHT;
+		else if (val == "isotropic"   ) type = MATERIAL_ISOTROPIC;
+
+		return std::make_pair(MATERIAL_TYPE, peg::any(type));
 	};
-	parser["MaterialColor"] = [&](const peg::SemanticValues& sv) {
-		currentMaterial.color = sv[0].get<vec3>();
+	parser["MaterialColor"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		vec3 color = sv[0].get<vec3>();
+
+		return std::make_pair(MATERIAL_COLOR, peg::any(color));
 	};
-	parser["MaterialTexPath"] = [&](const peg::SemanticValues& sv) {
-		currentMaterial.options.insert(std::make_pair("PATH", sv[0].get<std::string>()));
+	parser["MaterialTexPath"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string path = sv[0].get<std::string>();
+		
+		return std::make_pair(MATERIAL_TEX_PATH, peg::any(path));
 	};
-	parser["MaterialTexInterp"] = [&](const peg::SemanticValues& sv) {
-		currentMaterial.options.insert(std::make_pair("ITPLT", sv[0].get<std::string>()));
+	parser["MaterialTexInterp"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string val = sv[0].get<std::string>();
+
+		// determine interpolation type
+		ImageTexture::Interpolation interpolation = ImageTexture::BILINEAR;
+		if      (val == "bilinear") interpolation = ImageTexture::BILINEAR;
+		else if (val == "nearest" ) interpolation = ImageTexture::NEAREST_NEIGHBOR;
+
+		return std::make_pair(MATERIAL_TEX_INTERPOLATION, peg::any(interpolation));
 	};
-	parser["MaterialTexWrap"] = [&](const peg::SemanticValues& sv) {
-		std::string wrap = (sv.size() > 1)
-			? sv[0].get<std::string>() + " " + sv[1].get<std::string>()
-			: sv[0].get<std::string>() + " " + sv[0].get<std::string>();
-		currentMaterial.options.insert(std::make_pair("WRAP", wrap));
+	parser["MaterialTexWrap"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string wrapx = sv[0].get<std::string>();
+		std::string wrapy = (sv.size() > 1) ? sv[1].get<std::string>() : wrapx;
+		std::pair wrap(wrapx, wrapy);
+
+		return std::make_pair(MATERIAL_TEX_WRAP, peg::any(wrap));
 	};
-	parser["MaterialGlassCoeff"] = [&](const peg::SemanticValues& sv) {
+	parser["MaterialGlassCoeff"] = [](const peg::SemanticValues& sv) {
+		// grab value
 		double coeff = sv[0].get<double>();
-		currentMaterial.options.insert(std::make_pair("COEFF", std::to_string(coeff)));
+		
+		return std::make_pair(MATERIAL_REFRACTION_COEFF, peg::any(coeff));
 	};
 
 	/**
@@ -257,101 +433,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 	// parse file
 	parser.parse(text.c_str());
 
-
-	/**
-	 * print stuff for debugging
-	 */
-	std::cout << "Tracer" << std::endl;
-	std::cout << "    " << tracerobj.type << " " << tracerobj.width << ","
-		<< tracerobj.height << "," << tracerobj.samples << "," << tracerobj.depth << std::endl;
-
-	std::cout << "Camera" << std::endl;
-	std::cout << "    " << cameraobj.type << " " << cameraobj.pos << ","
-		<< cameraobj.lookat << "," << cameraobj.up << "," << cameraobj.fov << std::endl;
-
-	for (auto m : materialmap) {
-		auto mat = m.second;
-		std::cout << "Material" << std::endl;
-		std::cout << "    " << mat.name << " " << mat.type << " " << mat.color << std::endl;
-		for (auto o : mat.options) {
-			std::cout << "    " << o.first << " " << o.second << std::endl;
-		}
-	}
-
-	for (auto o : objectmap) {
-		auto obj = o.second;
-		std::cout << "Object" << std::endl;
-		std::cout << "    " << obj.name << " " << obj.type << " " << obj.pos << " " << obj.material << std::endl;
-		for (auto opt : obj.options) {
-			std::cout << "    " << opt.first << " " << opt.second << std::endl;
-		}
-	}
-
-	std::cout << "Scene" << std::endl;
-	std::cout << "    " << scenetype << std::endl;
-	for (auto e : elementmap) {
-		auto elem = e.second;
-		std::cout << "Element" << std::endl;
-		std::cout << "    " << elem.name << std::endl;
-	}
-
-	/**
-	 * create objects based on the descriptions of the scene file
-	 */
-	std::shared_ptr<SceneData> scenedata = std::make_shared<SceneData>();
-	create_tracer(scenedata, tracerobj);
-	create_camera(scenedata, cameraobj);
-	create_materials(scenedata, materialmap);
-	create_objects(scenedata, objectmap);
-	create_scene(scenedata, scenetype, elementmap);
-
-	return scenedata;
-}
-
-void rt::create_tracer(std::shared_ptr<SceneData>& scene, TracerObj& tracerobj) {
-	// extract common tracer attributes
-	size_t width = tracerobj.width;
-	size_t height = tracerobj.height;
-	size_t samples = tracerobj.samples;
-	size_t depth = tracerobj.depth;
-
-	// create tracer
-	if (tracerobj.type == "raycaster") {
-		scene->tracer = std::make_shared<Raycaster>(width, height, samples, depth);
-	}
-	else if (tracerobj.type == "raytracer") {
-		scene->tracer = std::make_shared<Raytracer>(width, height, samples, depth);
-	}
-	else if (tracerobj.type == "debugtracer") {
-		scene->tracer = std::make_shared<Debugtracer>(width, height, samples, depth);
-	}
-	else {
-		scene->tracer = std::make_shared<Raycaster>(width, height, samples, depth);
-	}
-}
-
-void rt::create_camera(std::shared_ptr<SceneData>& scene, CameraObj& cameraobj) {
-	// extract common camera attributes
-	vec3 pos    = cameraobj.pos;
-	vec3 lookat = cameraobj.lookat;
-	vec3 up     = cameraobj.up;
-	double fov  = cameraobj.fov;
-
-	// create camera
-	if (cameraobj.type == "simple") {
-		scene->camera = std::make_shared<SimpleCamera>(pos, lookat, up, fov, scene->tracer->aspect());
-	}
-	else if (cameraobj.type == "dof") {
-		// grab aperture if available
-		double aperture = 1.0;
-		if (has_option(cameraobj.options, "DOF"))
-			aperture = stod(cameraobj.options.at("DOF"));
-
-		scene->camera = std::make_shared<DOFCamera>(pos, lookat, up, fov, scene->tracer->aspect(), aperture);
-	}
-
-	// add camera to tracer
-	scene->tracer->setCamera(scene->camera);
+	return scene;
 }
 
 void rt::create_materials(std::shared_ptr<SceneData>& scene, std::map<std::string, MaterialObj>& materialmap) {
