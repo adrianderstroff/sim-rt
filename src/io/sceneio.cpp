@@ -276,34 +276,27 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		// create the appropriate tracer
 		switch(type) {
 		case MaterialType::MATERIAL_NORMAL:
-			std::pair material(name, std::make_shared<NormalMaterial>());
-			scene->materials.insert(material);
+			scene->materials.insert(std::make_pair(name, std::make_shared<NormalMaterial>()));
 			break;
 		case MaterialType::MATERIAL_LAMBERTIAN:
-			std::pair material(name, std::make_shared<Lambertian>(tex));
-			scene->materials.insert(material);
+			scene->materials.insert(std::make_pair(name, std::make_shared<Lambertian>(tex)));
 			break;
 		case MaterialType::MATERIAL_METAL:
-			std::pair material(name, std::make_shared<Metal>(tex));
-			scene->materials.insert(material);
+			scene->materials.insert(std::make_pair(name, std::make_shared<Metal>(tex)));
 			break;
 		case MaterialType::MATERIAL_DIELECTRIC:
 			double coeff = map_get(attributemap, MATERIAL_REFRACTION_COEFF, 1.0);
 
-			std::pair material(name, std::make_shared<Dielectric>(coeff, tex));
-			scene->materials.insert(material);
+			scene->materials.insert(std::make_pair(name, std::make_shared<Dielectric>(coeff, tex)));
 			break;
 		case MaterialType::MATERIAL_DIFFUSE_LIGHT:
-			std::pair material(name, std::make_shared<DiffuseLight>(tex));
-			scene->materials.insert(material);
+			scene->materials.insert(std::make_pair(name, std::make_shared<DiffuseLight>(tex)));
 			break;
 		case MaterialType::MATERIAL_ISOTROPIC:
-			std::pair material(name, std::make_shared<Isotropic>(tex));
-			scene->materials.insert(material);
+			scene->materials.insert(std::make_pair(name, std::make_shared<Isotropic>(tex)));
 			break;
 		default: // normal material
-			std::pair material(name, std::make_shared<NormalMaterial>());
-			scene->materials.insert(material);
+			scene->materials.insert(std::make_pair(name, std::make_shared<NormalMaterial>()));
 			break;
 		}
 	};
@@ -366,8 +359,9 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 	};
 
 	/**
-	 * building the material list
+	 * building the object list
 	 */
+	/*
 	std::map<std::string, ObjectObj> objectmap;
 	ObjectObj currentObject{ "sphere", "unnamed0", vec3(0), "", std::map<std::string,std::string>() };
 	parser["Object"] = [&](const peg::SemanticValues& sv) {
@@ -376,16 +370,16 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		// reset object
 		currentObject = ObjectObj{ "sphere", "unnamed" + std::to_string(objectmap.size()), vec3(0), "", std::map<std::string,std::string>() };
 	};
-	parser["ObjectName"] = [&](const peg::SemanticValues& sv) {
+	parser["ObjectName"] = [](const peg::SemanticValues& sv) {
 		currentObject.name = sv[0].get<std::string>();
 	};
-	parser["ObjectType"] = [&](const peg::SemanticValues& sv) {
+	parser["ObjectType"] = [](const peg::SemanticValues& sv) {
 		currentObject.type = sv[0].get<std::string>();
 	};
-	parser["ObjectPos"] = [&](const peg::SemanticValues& sv) {
+	parser["ObjectPos"] = [](const peg::SemanticValues& sv) {
 		currentObject.pos = sv[0].get<vec3>();
 	};
-	parser["ObjectMaterial"] = [&](const peg::SemanticValues& sv) {
+	parser["ObjectMaterial"] = [](const peg::SemanticValues& sv) {
 		currentObject.material = sv[0].get<std::string>();
 	};
 	parser["ObjectXAxis"] = [&](const peg::SemanticValues& sv) {
@@ -396,7 +390,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		std::string axis = "(" + x + "," + y + "," + z + ")";
 		currentMaterial.options.insert(std::make_pair("XAXIS", axis));
 	};
-	parser["ObjectYAxis"] = [&](const peg::SemanticValues& sv) {
+	parser["ObjectYAxis"] = [](const peg::SemanticValues& sv) {
 		vec3 yaxis = sv[0].get<vec3>();
 		std::string x = std::to_string(yaxis.x);
 		std::string y = std::to_string(yaxis.y);
@@ -404,14 +398,16 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		std::string axis = "(" + x + "," + y + "," + z + ")";
 		currentMaterial.options.insert(std::make_pair("YAXIS", axis));
 	};
-	parser["ObjectRadius"] = [&](const peg::SemanticValues& sv) {
+	parser["ObjectRadius"] = [](const peg::SemanticValues& sv) {
 		double r = sv[0].get<double>();
 		currentMaterial.options.insert(std::make_pair("R", std::to_string(r)));
 	};
+	*/
 
 	/**
-	 * building the element list
+	 * building the scene
 	 */
+	/*
 	std::map<std::string, SceneElement> elementmap;
 	SceneElement currentElement{ "unnamed0" };
 	std::string scenetype = "bvh";
@@ -421,12 +417,13 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		// reset object
 		currentElement = SceneElement{ "unnamed" + std::to_string(elementmap.size()) };
 	};
-	parser["ElementObject"] = [&](const peg::SemanticValues& sv) {
+	parser["ElementObject"] = [](const peg::SemanticValues& sv) {
 		currentObject.name = sv[0].get<std::string>();
 	};
-	parser["SceneType"] = [&](const peg::SemanticValues& sv) {
+	parser["SceneType"] = [](const peg::SemanticValues& sv) {
 		scenetype = sv[0].get<std::string>();
 	};
+	*/
 
 
 
