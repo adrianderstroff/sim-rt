@@ -42,16 +42,24 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		MaterialGlassCoeff <- 'COEFF' _ Double
 
 		# objects statement
-		Objects        <- 'OBJECTS' (_ Object)*
-		Object         <- 'OBJECT' (_ ObjectAttrib)*
-		ObjectAttrib   <- ObjectName / ObjectType / ObjectPos / ObjectMaterial / ObjectXAxis / ObjectYAxis / ObjectRadius
-		ObjectName     <- 'NAME' _ Word
-		ObjectType     <- 'TYPE' _ Word
-		ObjectPos      <- 'POS' _ Vector
-		ObjectMaterial <- 'MATERIAL' _ Word
-		ObjectXAxis    <- 'XAXIS' _ Vector
-		ObjectYAxis    <- 'YAXIS' _ Vector
-		ObjectRadius   <- 'R' _ Double
+		Objects             <- 'OBJECTS' (_ Object)*
+		Object              <- 'OBJECT' (_ ObjectAttrib)*
+		ObjectAttrib        <- ObjectName / ObjectType / ObjectPos / ObjectPos2 / ObjectMaterial / ObjectXAxis / ObjectYAxis / ObjectRadius / ObjectWidth / ObjectHeight / ObjectDepth / ObjectMeshPath / ObjectInvert / ObjectMeshNormalize / ObjectMeshSmooth
+		ObjectName          <- 'NAME' _ Word
+		ObjectType          <- 'TYPE' _ Word
+		ObjectPos           <- 'POS' _ Vector
+		ObjectPos2          <- 'POS2' _ Vector
+		ObjectMaterial      <- 'MATERIAL' _ Word
+		ObjectXAxis         <- 'XAXIS' _ Vector
+		ObjectYAxis         <- 'YAXIS' _ Vector
+		ObjectRadius        <- 'R' _ Double
+		ObjectWidth         <- 'WIDTH' _ Double
+		ObjectHeight        <- 'HEIGHT' _ Double
+		ObjectDepth         <- 'DEPTH' _ Double
+		ObjectMeshPath      <- 'PATH' _ Path
+		ObjectInvert        <- 'INVERT' _ Bool
+		ObjectMeshNormalize <- 'NORMALIZE' _ Bool
+		ObjectMeshSmooth    <- 'SMOOTH' _ Bool
 
 		# scene statement
 		Scene              <- 'SCENE' (_ SceneAttrib)*
@@ -67,6 +75,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		# general statements
 		Word        <- [a-z][a-z0-9]*
 		Path        <- [a-zA-Z0-9./]+
+		Bool        <- 'true' / 'false'
 		Number      <- [0-9]+
 		Double      <- '-'? [0-9]+ ('.' [0-9]+)?
 		Vector      <- '(' _ Double _ ',' _ Double _ ',' _ Double _ ')'
@@ -97,7 +106,8 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		return sv.token();
 	};
 	parser["Path"] = [](const peg::SemanticValues& sv) {
-		return sv.token();
+		std::string path = sv.token();
+		return path;
 	};
 	parser["Number"] = [](const peg::SemanticValues& sv) {
 		return stoi(sv.token());
@@ -259,7 +269,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		MaterialType type = map_get(attributemap, MATERIAL_TYPE, MATERIAL_NORMAL);
 		std::string name = map_get(attributemap, MATERIAL_NAME, "unnamed" + std::to_string(scene->materials.size()));
 		vec3 color = map_get(attributemap, MATERIAL_COLOR, vec3(1));
-		std::string texpath = map_get(attributemap, MATERIAL_TEX_PATH, "");
+		std::string texpath = map_get(attributemap, MATERIAL_TEX_PATH, std::string(""));
 		std::shared_ptr<ITexture> tex = std::make_shared<ConstantTexture>(color);
 		if (!texpath.empty()) {
 			auto& [image, status] = read_image(texpath);
@@ -285,9 +295,10 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 			scene->materials.insert(std::make_pair(name, std::make_shared<Metal>(tex)));
 			break;
 		case MaterialType::MATERIAL_DIELECTRIC:
-			double coeff = map_get(attributemap, MATERIAL_REFRACTION_COEFF, 1.0);
-
-			scene->materials.insert(std::make_pair(name, std::make_shared<Dielectric>(coeff, tex)));
+			{
+				double coeff = map_get(attributemap, MATERIAL_REFRACTION_COEFF, 1.0);
+				scene->materials.insert(std::make_pair(name, std::make_shared<Dielectric>(coeff, tex)));
+			}
 			break;
 		case MaterialType::MATERIAL_DIFFUSE_LIGHT:
 			scene->materials.insert(std::make_pair(name, std::make_shared<DiffuseLight>(tex)));
@@ -347,8 +358,16 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		// grab value
 		std::string wrapx = sv[0].get<std::string>();
 		std::string wrapy = (sv.size() > 1) ? sv[1].get<std::string>() : wrapx;
-		std::pair wrap(wrapx, wrapy);
 
+		// determine wrap type
+		ImageTexture::Wrap itpltx = ImageTexture::CLAMP;
+		if      (wrapx == "clamp" ) itpltx = ImageTexture::CLAMP;
+		else if (wrapx == "repeat") itpltx = ImageTexture::REPEAT;
+		ImageTexture::Wrap itplty = ImageTexture::CLAMP;
+		if      (wrapx == "clamp" ) itplty = ImageTexture::CLAMP;
+		else if (wrapx == "repeat") itplty = ImageTexture::REPEAT;
+
+		std::pair wrap(itpltx, itplty);
 		return std::make_pair(MATERIAL_TEX_WRAP, peg::any(wrap));
 	};
 	parser["MaterialGlassCoeff"] = [](const peg::SemanticValues& sv) {
@@ -361,69 +380,229 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 	/**
 	 * building the object list
 	 */
-	/*
-	std::map<std::string, ObjectObj> objectmap;
-	ObjectObj currentObject{ "sphere", "unnamed0", vec3(0), "", std::map<std::string,std::string>() };
 	parser["Object"] = [&](const peg::SemanticValues& sv) {
-		// insert current object
-		objectmap.insert(std::make_pair(currentObject.name, currentObject));
-		// reset object
-		currentObject = ObjectObj{ "sphere", "unnamed" + std::to_string(objectmap.size()), vec3(0), "", std::map<std::string,std::string>() };
+		// collect attributes
+		std::map<ObjectAttribute, peg::any> attributemap;
+		map_fill(attributemap, sv);
+
+		// grab common object attributes
+		ObjectType type = map_get(attributemap, OBJECT_TYPE, OBJECT_SPHERE);
+		std::string name = map_get(attributemap, OBJECT_NAME, "unnamed" + std::to_string(scene->objects.size()));
+		vec3 pos = map_get(attributemap, OBJECT_POS, vec3(0));
+		std::string materialid = map_get(attributemap, OBJECT_MATERIAL, std::string(""));
+		std::shared_ptr<IMaterial> material = std::make_shared<NormalMaterial>();
+		if (map_contains(scene->materials, materialid)) {
+			material = scene->materials.at(materialid);
+		}
+
+		// create the appropriate tracer
+		switch (type) {
+		case ObjectType::OBJECT_CUBE:
+			{
+				double width  = map_get(attributemap, OBJECT_WIDTH,  1.0);
+				double height = map_get(attributemap, OBJECT_HEIGHT, 1.0);
+				double depth  = map_get(attributemap, OBJECT_DEPTH,  1.0);
+				bool   invert = map_get(attributemap, OBJECT_INVERT, false);
+				std::shared_ptr<IHitable> cube = std::make_shared<Cube>(pos, width, height, depth, material, invert);
+				scene->objects.insert(std::make_pair(name, cube));
+			}
+			break;
+		case ObjectType::OBJECT_CYLINDER:
+			{
+				vec3 pos2 = map_get(attributemap, OBJECT_POS2, vec3(1));
+				double radius = map_get(attributemap, OBJECT_RADIUS, 1.0);
+				std::shared_ptr<IHitable> cylinder = std::make_shared<Cylinder>(pos, pos2, radius, material);
+				scene->objects.insert(std::make_pair(name, cylinder));
+			}
+			break;
+		case ObjectType::OBJECT_MESH:
+			{
+				std::string path = map_get(attributemap, OBJECT_MESH_PATH, std::string(""));
+				bool flip      = map_get(attributemap, OBJECT_INVERT,         false);
+				bool normalize = map_get(attributemap, OBJECT_MESH_NORMALIZE, false);
+				bool smooth    = map_get(attributemap, OBJECT_MESH_SMOOTH,    false);
+				std::shared_ptr<IHitable> mesh = load_mesh(path, material, flip, normalize, smooth);
+				scene->objects.insert(std::make_pair(name, mesh));
+			}
+			break;
+		case ObjectType::OBJECT_RECTANGLE:
+			{
+				vec3 xaxis = map_get(attributemap, OBJECT_XAXIS, vec3(1, 0, 0));
+				vec3 yaxis = map_get(attributemap, OBJECT_YAXIS, vec3(0, 1, 0));
+				std::shared_ptr<IHitable> rectangle = std::make_shared<Rectangle>(pos, xaxis, yaxis, material);
+				scene->objects.insert(std::make_pair(name, rectangle));
+			}
+		break;
+		case ObjectType::OBJECT_SPHERE:
+			{
+				double radius = map_get(attributemap, OBJECT_RADIUS, 1.0);
+				std::shared_ptr<IHitable> sphere = std::make_shared<Sphere>(pos, radius, material);
+				scene->objects.insert(std::make_pair(name, sphere));
+			}
+			break;
+		default: // sphere
+			{
+				double radius = map_get(attributemap, OBJECT_RADIUS, 1.0);
+				std::shared_ptr<IHitable> sphere = std::make_shared<Sphere>(pos, radius, material);
+				scene->objects.insert(std::make_pair(name, sphere));
+			}
+			break;
+		}
 	};
 	parser["ObjectName"] = [](const peg::SemanticValues& sv) {
-		currentObject.name = sv[0].get<std::string>();
+		// grab value
+		std::string name = sv[0].get<std::string>();
+
+		return std::make_pair(OBJECT_NAME, peg::any(name));
 	};
 	parser["ObjectType"] = [](const peg::SemanticValues& sv) {
-		currentObject.type = sv[0].get<std::string>();
+		std::string val = sv[0].get<std::string>();
+
+		// determine camera type
+		ObjectType type = OBJECT_SPHERE;
+		if      (val == "cube"     ) type = OBJECT_CUBE;
+		else if (val == "cylinder" ) type = OBJECT_CYLINDER;
+		else if (val == "mesh"     ) type = OBJECT_MESH;
+		else if (val == "rectangle") type = OBJECT_RECTANGLE;
+		else if (val == "sphere"   ) type = OBJECT_SPHERE;
+
+		return std::make_pair(OBJECT_TYPE, peg::any(type));
 	};
 	parser["ObjectPos"] = [](const peg::SemanticValues& sv) {
-		currentObject.pos = sv[0].get<vec3>();
+		// grab value
+		vec3 pos = sv[0].get<vec3>();
+
+		return std::make_pair(OBJECT_POS, peg::any(pos));
+	};
+	parser["ObjectPos2"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		vec3 pos = sv[0].get<vec3>();
+
+		return std::make_pair(OBJECT_POS2, peg::any(pos));
 	};
 	parser["ObjectMaterial"] = [](const peg::SemanticValues& sv) {
-		currentObject.material = sv[0].get<std::string>();
+		// grab value
+		std::string material = sv[0].get<std::string>();
+
+		return std::make_pair(OBJECT_MATERIAL, peg::any(material));
 	};
 	parser["ObjectXAxis"] = [&](const peg::SemanticValues& sv) {
+		// grab value
 		vec3 xaxis = sv[0].get<vec3>();
-		std::string x = std::to_string(xaxis.x);
-		std::string y = std::to_string(xaxis.y);
-		std::string z = std::to_string(xaxis.z);
-		std::string axis = "(" + x + "," + y + "," + z + ")";
-		currentMaterial.options.insert(std::make_pair("XAXIS", axis));
+		
+		return std::make_pair(OBJECT_XAXIS, peg::any(xaxis));
 	};
 	parser["ObjectYAxis"] = [](const peg::SemanticValues& sv) {
+		// grab value
 		vec3 yaxis = sv[0].get<vec3>();
-		std::string x = std::to_string(yaxis.x);
-		std::string y = std::to_string(yaxis.y);
-		std::string z = std::to_string(yaxis.z);
-		std::string axis = "(" + x + "," + y + "," + z + ")";
-		currentMaterial.options.insert(std::make_pair("YAXIS", axis));
+		
+		return std::make_pair(OBJECT_YAXIS, peg::any(yaxis));
 	};
 	parser["ObjectRadius"] = [](const peg::SemanticValues& sv) {
-		double r = sv[0].get<double>();
-		currentMaterial.options.insert(std::make_pair("R", std::to_string(r)));
+		// grab value
+		double radius = sv[0].get<double>();
+		
+		return std::make_pair(OBJECT_RADIUS, peg::any(radius));
 	};
-	*/
+	parser["ObjectWidth"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		double width = sv[0].get<double>();
+
+		return std::make_pair(OBJECT_WIDTH, peg::any(width));
+	};
+	parser["ObjectHeight"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		double height = sv[0].get<double>();
+
+		return std::make_pair(OBJECT_HEIGHT, peg::any(height));
+	};
+	parser["ObjectDepth"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		double depth = sv[0].get<double>();
+
+		return std::make_pair(OBJECT_DEPTH, peg::any(depth));
+	};
+	parser["ObjectMeshPath"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string path = sv[0].get<std::string>();
+
+		return std::make_pair(OBJECT_MESH_PATH, peg::any(path));
+	};
+	parser["ObjectInvert"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string val = sv[0].get<std::string>();
+
+		// determine bool value
+		bool invert = false;
+		if      (val == "true" ) invert = true;
+		else if (val == "false") invert = false;
+
+		return std::make_pair(OBJECT_INVERT, peg::any(invert));
+	};
+	parser["ObjectMeshNormalize"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string val = sv[0].get<std::string>();
+
+		// determine bool value
+		bool normalize = false;
+		if      (val == "true" ) normalize = true;
+		else if (val == "false") normalize = false;
+
+		return std::make_pair(OBJECT_MESH_NORMALIZE, peg::any(normalize));
+	};
+	parser["ObjectMeshSmooth"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		std::string val = sv[0].get<std::string>();
+
+		// determine bool value
+		bool smooth = false;
+		if      (val == "true")  smooth = true;
+		else if (val == "false") smooth = false;
+
+		return std::make_pair(OBJECT_MESH_SMOOTH, peg::any(smooth));
+	};
 
 	/**
 	 * building the scene
 	 */
-	/*
-	std::map<std::string, SceneElement> elementmap;
-	SceneElement currentElement{ "unnamed0" };
-	std::string scenetype = "bvh";
+	parser["Scene"] = [&](const peg::SemanticValues& sv) {
+		// build scene
+		scene->organization->build();
+
+		// add hitable and camera to the tracer
+		scene->tracer->setHitable(scene->organization);
+		scene->tracer->setCamera(scene->camera);
+	};
 	parser["Element"] = [&](const peg::SemanticValues& sv) {
-		// insert current object
-		elementmap.insert(std::make_pair(currentElement.name, currentElement));
-		// reset object
-		currentElement = SceneElement{ "unnamed" + std::to_string(elementmap.size()) };
+		// collect attributes
+		std::map<ElementAttribute, peg::any> attributemap;
+		map_fill(attributemap, sv);
+
+		// grab common object attributes
+		std::string objectid = map_get(attributemap, ELEMENT_OBJECT, std::string("unnamed"));
+		if (map_contains(scene->objects, objectid)) {
+			std::shared_ptr<IHitable> obj = scene->objects.at(objectid);
+
+			if (scene->organization != nullptr) {
+				scene->organization->insert(obj);
+			}
+		}
+
 	};
 	parser["ElementObject"] = [](const peg::SemanticValues& sv) {
-		currentObject.name = sv[0].get<std::string>();
+		// grab value
+		std::string objectid = sv[0].get<std::string>();
+
+		return std::make_pair(ELEMENT_OBJECT, peg::any(objectid));
 	};
-	parser["SceneType"] = [](const peg::SemanticValues& sv) {
-		scenetype = sv[0].get<std::string>();
+	parser["SceneType"] = [&](const peg::SemanticValues& sv) {
+		// grab value
+		std::string val = sv[0].get<std::string>();
+
+		// determine scene typé
+		if     (val == "bvh" ) scene->organization = std::make_shared<BVH>();
+		else if(val == "list") scene->organization = std::make_shared<HitableList>();
 	};
-	*/
 
 
 
@@ -431,286 +610,4 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 	parser.parse(text.c_str());
 
 	return scene;
-}
-
-void rt::create_materials(std::shared_ptr<SceneData>& scene, std::map<std::string, MaterialObj>& materialmap) {
-	// iterate over all materials
-	for (auto& materialobj : materialmap) {
-		if (materialobj.second.type == "normal") {
-			std::shared_ptr<IMaterial> mat = std::make_shared<NormalMaterial>();
-			scene->materials.insert(std::make_pair(materialobj.first, mat));
-		}
-		else if (materialobj.second.type == "lambertian") {
-			std::shared_ptr<ITexture> color = create_texture(materialobj.second);
-			std::shared_ptr<IMaterial> mat = std::make_shared<Lambertian>(color);
-			scene->materials.insert(std::make_pair(materialobj.first, mat));
-		}
-		else if (materialobj.second.type == "metal") {
-			std::shared_ptr<ITexture> color = create_texture(materialobj.second);
-			std::shared_ptr<IMaterial> mat = std::make_shared<Metal>(color);
-			scene->materials.insert(std::make_pair(materialobj.first, mat));
-		}
-		else if (materialobj.second.type == "dielectric") {
-			// create texture
-			std::shared_ptr<ITexture> color = create_texture(materialobj.second);
-
-			// grab refraction coefficient
-			double coeff = 1;
-			if (has_option(materialobj.second.options, "COEFF")) {
-				coeff = stod(materialobj.second.options.at("COEFF"));
-			}
-
-			// create dielectric material
-			std::shared_ptr<IMaterial> mat = std::make_shared<Dielectric>(coeff, color);
-			scene->materials.insert(std::make_pair(materialobj.first, mat));
-		}
-		else if (materialobj.second.type == "diffuselight") {
-			std::shared_ptr<ITexture> color = create_texture(materialobj.second);
-			std::shared_ptr<IMaterial> mat = std::make_shared<DiffuseLight>(color);
-			scene->materials.insert(std::make_pair(materialobj.first, mat));
-		}
-		else if (materialobj.second.type == "isotropic") {
-			std::shared_ptr<ITexture> color = create_texture(materialobj.second);
-			std::shared_ptr<IMaterial> mat = std::make_shared<Isotropic>(color);
-			scene->materials.insert(std::make_pair(materialobj.first, mat));
-		}
-		else {
-			console::println("Material not recognized");
-			console::println("Options are 'normal', 'lambertian', 'metal', 'dielectric', 'diffuselight', 'isotropic'");
-			console::println("assume 'normal'");
-			std::shared_ptr<IMaterial> mat = std::make_shared<NormalMaterial>();
-			scene->materials.insert(std::make_pair(materialobj.first, mat));
-		}
-	}
-}
-
-void rt::create_objects(std::shared_ptr<SceneData>& scene, std::map<std::string, ObjectObj>& objectmap) {	
-	// iterate over all objects
-	for (auto& obj : objectmap) {
-
-		// grab common object attributes
-		vec3 pos = obj.second.pos;
-		std::shared_ptr<rt::IMaterial> material = grab_material(scene, obj.second.material);
-
-		if (obj.second.type == "rectangle") {
-			// grab first axis
-			vec3 xaxis(0);
-			if (has_option(obj.second.options, "XAXIS")) {
-				xaxis = parse_vector(obj.second.options.at("XAXIS"));
-			}
-
-			// grab second axis
-			vec3 yaxis(0);
-			if (has_option(obj.second.options, "YAXIS")) {
-				yaxis = parse_vector(obj.second.options.at("YAXIS"));
-			}
-
-			// create rectangle
-			std::shared_ptr<IHitable> rectangle = std::make_shared<Rectangle>(pos, xaxis, yaxis, material);
-			scene->objects.insert(std::make_pair(obj.first, rectangle));
-		}
-		else if (obj.second.type == "sphere") {
-			// grab radius
-			double radius = 1;
-			if (has_option(obj.second.options, "R")) {
-				radius = stod(obj.second.options.at("R"));
-			}
-
-			// create sphere
-			std::shared_ptr<IHitable> sphere = std::make_shared<Sphere>(pos, radius, material);
-			scene->objects.insert(std::make_pair(obj.first, sphere));
-		}
-		else if (obj.second.type == "cube") {
-			// grab width
-			double width = 1;
-			if (has_option(obj.second.options, "WIDTH")) {
-				width = stod(obj.second.options.at("WIDTH"));
-			}
-
-			// grab height
-			double height = 1;
-			if (has_option(obj.second.options, "HEIGHT")) {
-				height = stod(obj.second.options.at("HEIGHT"));
-			}
-
-			// grab depth
-			double depth = 1;
-			if (has_option(obj.second.options, "DEPTH")) {
-				depth = stod(obj.second.options.at("DEPTH"));
-			}
-
-			// create cube
-			std::shared_ptr<IHitable> cube = std::make_shared<Cube>(pos, width, height, depth, material);
-			scene->objects.insert(std::make_pair(obj.first, cube));
-		}
-		else if (obj.second.type == "cylinder") {
-			// grab p1
-			vec3 p1(0);
-			if (has_option(obj.second.options, "P1")) {
-				p1 = parse_vector(obj.second.options.at("P1"));
-			}
-
-			// grab p2
-			vec3 p2(1);
-			if (has_option(obj.second.options, "P2")) {
-				p2 = parse_vector(obj.second.options.at("P2"));
-			}
-
-			// grab radius
-			double radius = 1;
-			if (has_option(obj.second.options, "R")) {
-				radius = stod(obj.second.options.at("R"));
-			}
-
-			// create cylinder
-			std::shared_ptr<IHitable> cube = std::make_shared<Cylinder>(p1, p2, radius, material);
-			scene->objects.insert(std::make_pair(obj.first, cube));
-		}
-		else if (obj.second.type == "mesh") {
-			std::string filename = ".";
-			if (has_option(obj.second.options, "PATH")) {
-				filename = obj.second.options.at("PATH");
-			}
-
-			// create mesh
-			std::shared_ptr<IHitable> mesh = load_mesh(filename, material);
-			scene->objects.insert(std::make_pair(obj.first, mesh));
-		}
-	}
-}
-
-void rt::create_scene(std::shared_ptr<SceneData>& scene, std::string scenetype, std::map<std::string, SceneElement>& elementmap) {
-	// create world
-	std::shared_ptr<BVH> world = std::make_shared<BVH>();
-	for (auto& element : elementmap) {
-		if (scene->objects.find(element.second.name) != scene->objects.end()) {
-			std::shared_ptr<IHitable> object = scene->objects.at(element.second.name);
-			world->insert(object);
-		}
-	}
-	world->build();
-
-	// add world to scene and tracer
-	scene->world = world;
-	scene->tracer->setHitable(world);
-}
-
-bool rt::has_option(std::map<std::string, std::string>& options, std::string findoption) {
-	return options.find(findoption) != options.end();
-}
-
-std::shared_ptr<rt::ITexture> rt::create_texture(MaterialObj& materialobj) {
-	// grab the color
-	vec3 color = materialobj.color;
-	std::shared_ptr<ITexture> texture = std::make_shared<ConstantTexture>(color);
-
-	// see if a texture path is specified
-	if (has_option(materialobj.options, "PATH")) {
-		auto [image, status] = read_image(materialobj.options.at("PATH"));
-		if (status) {
-			// create image texture
-			auto imagetexture = std::make_shared<ImageTexture>(image);
-
-			// check for interpolation method and update image texture
-			if (has_option(materialobj.options, "ITPLT")) {
-				std::string interpolationmethod = materialobj.options.at("ITPLT");
-				if (interpolationmethod == "bilinear") {
-					imagetexture->set_interpolation_method(ImageTexture::Interpolation::BILINEAR);
-				}
-				else if (interpolationmethod == "nearest") {
-					imagetexture->set_interpolation_method(ImageTexture::Interpolation::NEAREST_NEIGHBOR);
-				}
-				else {
-					console::println("Interpolation method not recognized");
-					console::println("Options are 'bilinear', 'nearest'");
-					console::println("assume 'bilinear'");
-					imagetexture->set_interpolation_method(ImageTexture::Interpolation::BILINEAR);
-				}
-			}
-
-			// check for texture wrap and update image texture
-			if (has_option(materialobj.options, "WRAP")) {
-				std::string wrap = materialobj.options.at("WRAP");
-				std::vector<std::string> tokens = split(wrap, ' ');
-
-				// set wrap in x
-				ImageTexture::Wrap wrapx = ImageTexture::Wrap::CLAMP;
-				if (tokens.at(0) == "repeat") {
-					wrapx = ImageTexture::Wrap::REPEAT;
-				}
-				else if (tokens.at(0) == "clamp") {
-					wrapx = ImageTexture::Wrap::CLAMP;
-				}
-				else {
-					console::println("Texture wrap x not recognized");
-					console::println("Options are 'clamp', 'repeat'");
-					console::println("assume 'clamp'");
-				}
-
-				// set wrap in x
-				ImageTexture::Wrap wrapy = ImageTexture::Wrap::CLAMP;
-				if (tokens.at(1) == "repeat") {
-					wrapy = ImageTexture::Wrap::REPEAT;
-				}
-				else if (tokens.at(1) == "clamp") {
-					wrapy = ImageTexture::Wrap::CLAMP;
-				}
-				else {
-					console::println("Texture wrap x not recognized");
-					console::println("Options are 'clamp', 'repeat'");
-					console::println("assume 'clamp'");
-				}
-
-				imagetexture->set_wrap_method(wrapx, wrapy);
-			}
-
-			// replace constant texture with image texture
-			texture = imagetexture;
-		}
-	}
-
-	return texture;
-}
-
-std::shared_ptr<rt::IMaterial> rt::grab_material(std::shared_ptr<SceneData>& scene, std::string materialid) {
-	std::shared_ptr<IMaterial> material;
-	
-	// look up material in list of materials
-	if (scene->materials.find(materialid) != scene->materials.end()) {
-		material = scene->materials.at(materialid);
-	}
-	else {
-		// fall back material
-		material = std::make_shared<Lambertian>(new_color(1));
-	}
-
-	return material;
-}
-
-rt::vec3 rt::parse_vector(std::string text) {
-	auto grammar = R"(
-		Vector      <- '(' _ Double _ ',' _ Double _ ',' _ Double _ ')'
-		Double      <- '-'? [0-9]+ ('.' [0-9]+)?
-		~_			<- [ \t\r\n]*
-    )";
-
-	peg::parser parser;
-	auto ok = parser.load_grammar(grammar);
-	assert(ok);
-
-	vec3 out(0);
-
-	parser["Double"] = [](const peg::SemanticValues& sv) -> double {
-		return stod(sv.token());
-	};
-	parser["Vector"] = [&](const peg::SemanticValues& sv) {
-		double x = sv[0].get<double>();
-		double y = sv[1].get<double>();
-		double z = sv[2].get<double>();
-		out = vec3(x, y, z);
-	};
-
-	parser.parse(text.c_str());
-
-	return out;
 }

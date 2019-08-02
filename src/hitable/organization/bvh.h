@@ -3,11 +3,11 @@
 
 #include <vector>
 
-#include "hitable/ihitable.h"
+#include "iorganization.h"
 #include "io/console.h"
 
 namespace rt {
-class BVH : public IHitable {
+class BVH : public IOrganization {
 public:
 	struct Node {
 		std::shared_ptr<Node> left;
@@ -19,9 +19,9 @@ public:
 	BVH(size_t maxleafsize = 10, size_t maxrecursiondepth = 50) 
 		: m_maxleafsize(maxleafsize), m_maxrecursiondepth(maxrecursiondepth) { }
 
-	void insert(std::shared_ptr<IHitable> hitable);
-	void insert_all(std::vector<std::shared_ptr<IHitable>> hitables);
-	void build();
+	void insert(std::shared_ptr<IHitable> hitable) override;
+	void insert_all(std::vector<std::shared_ptr<IHitable>> hitables) override;
+	void build() override;
 
 	virtual bool hit(const ray& r, double tMin, double tMax, HitRecord& rec) const override;
 	virtual bool boundingbox(aabb& box) const override;

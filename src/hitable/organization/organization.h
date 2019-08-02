@@ -3,5 +3,6 @@
 
 #include "bvh.h"
 #include "hitablelist.h"
+#include "iorganization.h"
 
 #endif//ORGANIZATION_H

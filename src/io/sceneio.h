@@ -21,13 +21,10 @@ namespace rt {
 		std::shared_ptr<ICamera> camera;
 		std::map<std::string, std::shared_ptr<IMaterial>> materials;
 		std::map<std::string, std::shared_ptr<IHitable>> objects;
+		std::shared_ptr<IOrganization> organization;
 		std::shared_ptr<IHitable> world;
 	};
 
-	struct TracerObj { 
-		std::string type; 
-		int width, height, samples, depth; 
-	};
 	enum TracerType {
 		RAYCASTER,
 		RAYTRACER,
@@ -68,27 +65,39 @@ namespace rt {
 		MATERIAL_TEX_WRAP,
 		MATERIAL_REFRACTION_COEFF
 	};
-
-	struct CameraObj { 
-		std::string type; 
-		vec3 pos, lookat, up; 
-		double fov;
-		std::map<std::string, std::string> options;
+	enum ObjectType {
+		OBJECT_CUBE,
+		OBJECT_CYLINDER,
+		OBJECT_MESH,
+		OBJECT_RECTANGLE,
+		OBJECT_SPHERE
 	};
-
-	struct MaterialObj {
-		std::string type;
-		std::string name;
-		vec3        color;
-		std::map<std::string, std::string> options;
+	enum ObjectAttribute {
+		OBJECT_TYPE,
+		OBJECT_NAME,
+		OBJECT_POS,
+		OBJECT_POS2,
+		OBJECT_MATERIAL,
+		OBJECT_XAXIS,
+		OBJECT_YAXIS,
+		OBJECT_RADIUS,
+		OBJECT_WIDTH,
+		OBJECT_HEIGHT,
+		OBJECT_DEPTH,
+		OBJECT_INVERT,
+		OBJECT_MESH_PATH,
+		OBJECT_MESH_NORMALIZE,
+		OBJECT_MESH_SMOOTH
 	};
-
-	struct ObjectObj {
-		std::string type;
-		std::string name;
-		vec3        pos;
-		std::string material;
-		std::map<std::string, std::string> options;
+	enum SceneType {
+		SCENE_BVH,
+		SCENE_LIST
+	};
+	enum SceneAttribute {
+		SCENE_TYPE
+	};
+	enum ElementAttribute {
+		ELEMENT_OBJECT
 	};
 
 	struct SceneElement {
@@ -101,12 +110,6 @@ namespace rt {
 	};
 
 	std::shared_ptr<SceneData> read_scene(std::string scenepath);
-
-	void create_materials(std::shared_ptr<SceneData>& scene, std::map<std::string, MaterialObj>& materialmap);
-	void create_objects(std::shared_ptr<SceneData>& scene, std::map<std::string, ObjectObj>& objectmap);
-	void create_scene(std::shared_ptr<SceneData>& scene, std::string scenetype, std::map<std::string, SceneElement>& elementmap);
-
-	bool has_option(std::map<std::string, std::string>& options, std::string findoption);
 	
 	template <typename T, typename S>
 	inline bool map_contains(std::map<T, S>& m, T elem) {
@@ -126,10 +129,6 @@ namespace rt {
 			m.insert(val);
 		}
 	}
-
-	std::shared_ptr<ITexture> create_texture(MaterialObj& materialobj);
-	std::shared_ptr<IMaterial> grab_material(std::shared_ptr<SceneData>& scene, std::string materialid);
-	vec3 parse_vector(std::string text);
 }
 
 #endif//SCENE_IO_H

@@ -111,7 +111,10 @@ void env_images() {
 }
 
 int main() {
-	auto scene = read_scene("./image/cornell2.ssf");
+	// derive tracer, camera and world from scene file
+	auto scene = read_scene("./image/cornell.ssf");
+
+	// run tracer
 	scene->tracer->run();
 	scene->tracer->write("./image/test.png");
 
