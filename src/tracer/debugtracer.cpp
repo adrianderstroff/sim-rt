@@ -1,13 +1,13 @@
 #include "debugtracer.h"
 
 rt::Debugtracer::Debugtracer(unsigned int width, unsigned int height, unsigned int samples, size_t maxdepth)
-	: m_backgroundcolor(0, 0, 0), m_width(width), m_height(height), m_samples(samples), m_maxdepth(maxdepth), m_debugmode(DebugMode::LINES),
+	: m_backgroundcolor(0, 0, 0), m_width(width), m_height(height), m_samples(samples), m_maxdepth(maxdepth), m_debugmode(DebugMode::POINTS),
 	  m_linewidth(0.001), m_pointsize(0.01), m_renderer_width(width), m_renderer_height(height), m_renderer_samples(samples) {
 	m_raycaster = Raycaster(width, height, samples, 1);
 }
 
 rt::Debugtracer::Debugtracer(Resolution r, Samples s, TraceDepth t) 
-	: m_backgroundcolor(0, 0, 0), m_debugmode(DebugMode::LINES), m_linewidth(0.001), m_pointsize(0.01) {
+	: m_backgroundcolor(0, 0, 0), m_debugmode(DebugMode::POINTS), m_linewidth(0.001), m_pointsize(0.01) {
 	// determine resolution
 	auto [width, height] = determine_resolution(r);
 	m_width = width; m_height = height;

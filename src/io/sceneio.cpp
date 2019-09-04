@@ -121,6 +121,14 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		double z = sv[2].get<double>();
 		return vec3(x, y, z);
 	};
+	parser["Bool"] = [](const peg::SemanticValues& sv) {
+		std::string val = sv.token();
+
+		bool res = false;
+		if (val == "true") res = true;
+
+		return res;
+	};
 
 	/**
 	 * building the tracer object
@@ -530,34 +538,19 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 	};
 	parser["ObjectInvert"] = [](const peg::SemanticValues& sv) {
 		// grab value
-		std::string val = sv[0].get<std::string>();
-
-		// determine bool value
-		bool invert = false;
-		if      (val == "true" ) invert = true;
-		else if (val == "false") invert = false;
+		bool invert = sv[0].get<bool>();
 
 		return std::make_pair(OBJECT_INVERT, peg::any(invert));
 	};
 	parser["ObjectMeshNormalize"] = [](const peg::SemanticValues& sv) {
 		// grab value
-		std::string val = sv[0].get<std::string>();
-
-		// determine bool value
-		bool normalize = false;
-		if      (val == "true" ) normalize = true;
-		else if (val == "false") normalize = false;
+		bool normalize = sv[0].get<bool>();
 
 		return std::make_pair(OBJECT_MESH_NORMALIZE, peg::any(normalize));
 	};
 	parser["ObjectMeshSmooth"] = [](const peg::SemanticValues& sv) {
 		// grab value
-		std::string val = sv[0].get<std::string>();
-
-		// determine bool value
-		bool smooth = false;
-		if      (val == "true")  smooth = true;
-		else if (val == "false") smooth = false;
+		bool smooth = sv[0].get<bool>();
 
 		return std::make_pair(OBJECT_MESH_SMOOTH, peg::any(smooth));
 	};
