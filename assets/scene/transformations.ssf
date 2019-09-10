@@ -1,0 +1,61 @@
+TRACER
+	TYPE       raycaster
+	RESOLUTION 640 640
+	SAMPLES    10
+	DEPTH      1
+
+CAMERA
+	TYPE   simple
+	POS    (0,0,-2)
+	LOOKAT (0,0,0)
+	UP     (0,1,0)
+	FOV    46
+
+MATERIALS
+	MATERIAL
+		NAME metal
+		TYPE metal
+		COLOR (0.8,0.8,0.8)
+	MATERIAL
+		NAME red
+		TYPE diffuselight
+		COLOR (4,0,0)
+	MATERIAL
+		NAME green
+		TYPE diffuselight
+		COLOR (0,4,0)
+	MATERIAL
+		NAME blue
+		TYPE diffuselight
+		COLOR (0,0,4)
+		
+OBJECTS
+	OBJECT
+		NAME     cube
+		TYPE     cube
+		WIDTH    1
+		HEIGHT   1
+		DEPTH    1
+		INVERT   false
+		MATERIAL metal
+	OBJECT
+		NAME     redplane
+		TYPE     rectangle
+		POS      (0,0,0)
+		XAXIS    (1,0,0)
+		YAXIS    (0,0,-1)
+		MATERIAL red
+		
+SCENE
+	TYPE bvh
+	ELEMENTS
+		ELEMENT
+			OBJECT cube
+			TRANSFORM
+				ROTATE (0,1,0) 45
+				TRANSLATE (-1,0,-2)
+		ELEMENT
+			OBJECT cube
+			TRANSFORM
+				ROTATE (0,0,1) 45
+				TRANSLATE (1,0,-2)

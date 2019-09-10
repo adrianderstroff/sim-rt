@@ -67,10 +67,13 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		SceneType          <- 'TYPE' _ Word
 		Elements           <- 'ELEMENTS' (_ Element)*
 		Element            <- 'ELEMENT' (_ ElementAttrib)*
-		ElementAttrib      <- ElementObject / ElementTranslation / ElementRotation
+		ElementAttrib      <- ElementObject / ElementTransform
 		ElementObject      <- 'OBJECT' _ Word
-		ElementTranslation <- 'TRANSLATE' Vector
-		ElementRotation    <- 'ROTATE' Vector Double
+		ElementTransform   <- 'TRANSFORM' (_ TransformAction)*
+		# transform statement
+		TransformAction    <- TransformTranslate / TransformRotate
+		TransformTranslate <- 'TRANSLATE' Vector
+		TransformRotate    <- 'ROTATE' Vector Double
 
 		# general statements
 		Word        <- [a-z][a-z0-9]*
@@ -576,6 +579,27 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		if (map_contains(scene->objects, objectid)) {
 			std::shared_ptr<IHitable> obj = scene->objects.at(objectid);
 
+			// TODO
+			// apply transformations, maybe add a transformation statement and
+			// pre apply them. this means that the transformation classes have
+			// to be rewritten
+			auto transformations = map_get(attributemap, ELEMENT_TRANSFORM, std::vector<std::pair<TransformAttribute, peg::any>>());
+			for (size_t i = 0; i < transformations.size(); ++i) {
+				auto transformation = transformations.at(i);
+				if (transformation.first == TRANSFORM_TRANSLATE) {
+					vec3 offset = transformation.second.get<vec3>();
+					auto translation = std::make_shared<Translation>(obj, offset);
+					obj = translation;
+				}
+				if (transformation.first == TRANSFORM_ROTATE) {
+					auto axisangle = transformation.second.get<std::pair<vec3, double>>();
+					vec3 axis = axisangle.first;
+					double angle = axisangle.second;
+					auto rotation = std::make_shared<Rotation>(obj, axis, angle);
+					obj = rotation;
+				}
+			}
+
 			if (scene->organization != nullptr) {
 				scene->organization->insert(obj);
 			}
@@ -595,6 +619,27 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		// determine scene typé
 		if     (val == "bvh" ) scene->organization = std::make_shared<BVH>();
 		else if(val == "list") scene->organization = std::make_shared<HitableList>();
+	};
+	parser["ElementTransform"] = [](const peg::SemanticValues& sv) {
+		// grab all values in order
+		std::vector<std::pair<TransformAttribute, peg::any>> transformations;
+		vector_fill(transformations, sv);
+
+		return std::make_pair(ELEMENT_TRANSFORM, transformations);
+	};
+	parser["TransformTranslate"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		vec3 translate = sv[0].get<vec3>();
+
+		return std::make_pair(TRANSFORM_TRANSLATE, peg::any(translate));
+	};
+	parser["TransformRotate"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		vec3 axis = sv[0].get<vec3>();
+		double angle = sv[1].get<double>();
+
+		auto axisangle = std::make_pair(axis, angle);
+		return std::make_pair(TRANSFORM_ROTATE, peg::any(axisangle));
 	};
 
 

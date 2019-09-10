@@ -1,0 +1,104 @@
+TRACER
+	TYPE       raytracer
+	RESOLUTION 256 240
+	SAMPLES    10000
+	DEPTH      100
+
+CAMERA
+	TYPE   simple
+	POS    (0,5,-10)
+	LOOKAT (0,0,0)
+	UP     (0,1,0)
+	FOV    45
+
+MATERIALS
+	MATERIAL
+		NAME light
+		TYPE diffuselight
+		COLOR (1,1,1)
+	MATERIAL
+		NAME glass
+		TYPE dielectric
+		PATH ./image/profile.jpg 
+	MATERIAL
+		NAME white 
+		TYPE lambertian
+		COLOR (1,1,1)
+	MATERIAL
+		NAME floor
+		TYPE metal
+		COLOR (1,0,0)
+	MATERIAL
+		NAME blue
+		TYPE lambertian
+		COLOR (0,0,1)
+
+OBJECTS
+	OBJECT
+		NAME     wall1
+		TYPE     rectangle
+		POS      (0,0.25,1)
+		XAXIS    (-1.5,0,0)
+		YAXIS    (0,0.25,0)
+		MATERIAL white
+	OBJECT
+		NAME     wall2
+		TYPE     rectangle
+		POS      (0,7.25,1)
+		XAXIS    (-1.5,0,0)
+		YAXIS    (0,3.75,0)
+		MATERIAL white
+	OBJECT
+		NAME     wall3
+		TYPE     rectangle
+		POS      (-5,4.5,1)
+		XAXIS    (-3.5,0,0)
+		YAXIS    (0,6.5,0)
+		MATERIAL white
+	OBJECT
+		NAME     wall4
+		TYPE     rectangle
+		POS      (5,4.5,1)
+		XAXIS    (-3.5,0,0)
+		YAXIS    (0,6.5,0)
+		MATERIAL white
+	OBJECT
+		NAME     floor
+		TYPE     rectangle
+		POS      (0,0,0)
+		XAXIS    (10,0,0)
+		YAXIS    (0,0,-10)
+		MATERIAL white
+	OBJECT
+		NAME     image
+		TYPE     rectangle
+		POS      (0,2,1)
+		XAXIS    (-1.5,0,0)
+		YAXIS    (0,1.5,0)
+		MATERIAL glass
+	OBJECT
+		NAME     light
+		TYPE     rectangle
+		POS      (0,2,2)
+		XAXIS    (-2.5,0,0)
+		YAXIS    (0,2.5,0)
+		MATERIAL light
+
+
+SCENE
+	TYPE bvh
+	ELEMENTS
+		ELEMENT
+			OBJECT wall1
+		ELEMENT
+			OBJECT wall2
+		ELEMENT
+			OBJECT wall3
+		ELEMENT
+			OBJECT wall4
+		ELEMENT
+			OBJECT image
+		ELEMENT
+			OBJECT floor
+		ELEMENT
+			OBJECT light

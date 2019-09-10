@@ -64,9 +64,10 @@ void env_images() {
 int main() {
 	// derive tracer, camera and world from scene file
 	//auto scene = read_scene("./image/cornell.ssf");
-	auto scene = read_scene("./image/mirrors.ssf");
+	auto scene = read_scene("D:/Programming/Cpp/sim-rt/assets/scene/transformations.ssf");
 
 	// run tracer
+	scene->tracer->setBackgroundColor(vec3(0, 0, 0));
 	scene->tracer->run();
 	scene->tracer->write("./image/test.png");
 
