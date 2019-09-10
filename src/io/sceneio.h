@@ -135,9 +135,9 @@ namespace rt {
 		}
 	}
 	template <typename T, typename S>
-	inline void vector_fill(std::vector<T, S>& v, const peg::SemanticValues& sv) {
+	inline void vector_fill(std::vector<std::pair<T,S>> & v, const peg::SemanticValues& sv) {
 		for (size_t i = 0; i < sv.size(); ++i) {
-			auto& val = sv[i].get<std::pair<T, S>>();
+			auto val = sv[i].get<std::pair<T, S>>();
 			v.push_back(val);
 		}
 	}

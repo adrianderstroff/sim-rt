@@ -72,8 +72,8 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		ElementTransform   <- 'TRANSFORM' (_ TransformAction)*
 		# transform statement
 		TransformAction    <- TransformTranslate / TransformRotate
-		TransformTranslate <- 'TRANSLATE' Vector
-		TransformRotate    <- 'ROTATE' Vector Double
+		TransformTranslate <- 'TRANSLATE' _ Vector
+		TransformRotate    <- 'ROTATE' _ Vector _ Double
 
 		# general statements
 		Word        <- [a-z][a-z0-9]*
@@ -583,25 +583,26 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 			// apply transformations, maybe add a transformation statement and
 			// pre apply them. this means that the transformation classes have
 			// to be rewritten
+			std::shared_ptr<IHitable> cur = obj;
 			auto transformations = map_get(attributemap, ELEMENT_TRANSFORM, std::vector<std::pair<TransformAttribute, peg::any>>());
 			for (size_t i = 0; i < transformations.size(); ++i) {
 				auto transformation = transformations.at(i);
 				if (transformation.first == TRANSFORM_TRANSLATE) {
 					vec3 offset = transformation.second.get<vec3>();
-					auto translation = std::make_shared<Translation>(obj, offset);
-					obj = translation;
+					auto translation = std::make_shared<Translation>(cur, offset);
+					cur = translation;
 				}
 				if (transformation.first == TRANSFORM_ROTATE) {
 					auto axisangle = transformation.second.get<std::pair<vec3, double>>();
 					vec3 axis = axisangle.first;
 					double angle = axisangle.second;
-					auto rotation = std::make_shared<Rotation>(obj, axis, angle);
-					obj = rotation;
+					auto rotation = std::make_shared<Rotation>(cur, axis, angle);
+					cur = rotation;
 				}
 			}
 
 			if (scene->organization != nullptr) {
-				scene->organization->insert(obj);
+				scene->organization->insert(cur);
 			}
 		}
 
@@ -625,7 +626,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		std::vector<std::pair<TransformAttribute, peg::any>> transformations;
 		vector_fill(transformations, sv);
 
-		return std::make_pair(ELEMENT_TRANSFORM, transformations);
+		return std::make_pair(ELEMENT_TRANSFORM, peg::any(transformations));
 	};
 	parser["TransformTranslate"] = [](const peg::SemanticValues& sv) {
 		// grab value
