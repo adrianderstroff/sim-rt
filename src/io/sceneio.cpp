@@ -579,10 +579,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		if (map_contains(scene->objects, objectid)) {
 			std::shared_ptr<IHitable> obj = scene->objects.at(objectid);
 
-			// TODO
-			// apply transformations, maybe add a transformation statement and
-			// pre apply them. this means that the transformation classes have
-			// to be rewritten
+			// apply transformations to object
 			std::shared_ptr<IHitable> cur = obj;
 			auto transformations = map_get(attributemap, ELEMENT_TRANSFORM, std::vector<std::pair<TransformAttribute, peg::any>>());
 			for (size_t i = 0; i < transformations.size(); ++i) {

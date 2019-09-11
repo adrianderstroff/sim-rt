@@ -61,15 +61,38 @@ void env_images() {
 	raytracer.write("./image/myimage.png");
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+	
+	// list of required parameters
+	std::string scenepath;
+	std::string imagepath = "unnamed.png";
+
+	// grab parameters from console input
+	if (argc == 2) {
+		scenepath = std::string(argv[1]);
+	}
+	else if (argc == 3) {
+		scenepath = std::string(argv[1]);
+		imagepath = std::string(argv[2]);
+	}
+	else {
+		std::cout << "Invalid number of command line arguments!" << std::endl;
+		std::cout << "Should be SCENE_PATH (OUTPUT_FILE_PATH)" << std::endl;
+		exit(-1);
+	}
+
+	// grab input parameters
+	for (int i = 0; i < argc; ++i) {
+		std::cout << i << " " << argv[i] << std::endl;
+	}
+
 	// derive tracer, camera and world from scene file
-	//auto scene = read_scene("./image/cornell.ssf");
-	auto scene = read_scene("D:/Programming/Cpp/sim-rt/assets/scene/transformations.ssf");
+	auto scene = read_scene(scenepath);
 
 	// run tracer
 	scene->tracer->setBackgroundColor(vec3(0, 0, 0));
 	scene->tracer->run();
-	scene->tracer->write("./image/test.png");
+	scene->tracer->write(imagepath);
 
     return 0;
 }

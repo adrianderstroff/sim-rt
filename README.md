@@ -21,6 +21,44 @@ This sections covers algorithms and techniques that might be implemented in the 
   - **BVH**
 - **Monte Carlo Integration** - found in the [pbr-book](http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration.html)
 
+## Scene Format
+
+The main application can be used as a command line tool. It can be called with
+
+```.\sim-rt.exe <SCENE_PATH> <OUTPUT_IMAGE_PATH>?```
+
+while the path of the output image path is optional. If it's not specified it defaults to:
+
+```.\sim-rt.exe <SCENE_PATH> .\unnamed.png```
+
+### Structure
+
+The file consists of 5 parts namely ***TRACER, CAMERA, MATERIALS, OBJECTS*** and ***SCENE***. The parts should be specified in the file in this order to avoid unexpected errors as the scene is constructed on the fly and might depend on previously defined parts. In the following all 5 parts are described in detail.
+
+#### TRACER
+
+Specifies the type of tracer, the image resolution of the image plane and thus the resolution of the output image, the number of samples per pixel and the trace depth per ray.
+
+```
+TRACER
+    TYPE       raytracer
+    RESOLUTION 1080 720
+    SAMPLES    100
+    DEPTH      100
+```
+
+So far there are three different types of tracers ***raycaster, raytracer*** and ***debugtracer***. The debugtracer renders the intersections between the rays and the scene and displays those intersections as spheres, while rendering the scene from a different angle than the camera.
+
+The resolution keyword has to be followed by two positive integer numbers  bigger than zero. The first number is the width of the output image and the second number is the height of the output image.
+
+The number of samples has to be followed by one positive integer number bigger than zero. The number of samples specifies the number of rays emitted per pixel. The resulting colors per ray are averaged to get the final pixel color.
+
+The depth keyword is followed by a positive integer number bigger than zero. It specifies the trace depth i.e. the number of indirections.
+
+#### CAMERA
+
+
+
 ## License
 
 The MIT License (MIT)
