@@ -19,7 +19,7 @@ MATERIALS
 	MATERIAL
 		NAME glass
 		TYPE dielectric
-		PATH ./image/profile.jpg 
+		PATH ../image/sample1.jpg 
 	MATERIAL
 		NAME white 
 		TYPE lambertian

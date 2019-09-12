@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # set paths
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
+set(ASSET_DIR ${CMAKE_SOURCE_DIR}/assets)
 set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/extern)
 
 #add openmp support if found
@@ -21,6 +22,9 @@ endif()
 
 # collect source files
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h)
+
+# get all assets inside the project
+file(GLOB_RECURSE ASSETS ${ASSET_DIR}/*.png ${ASSET_DIR}/*.jpg ${ASSET_DIR}/*.ssf)
 
 # stb
 file(GLOB STB_INCLUDE ${EXTERNAL_DIR}/stb/*.h)
@@ -52,6 +56,7 @@ if(MSVC)
 assign_source_group(${SRC_FILES})
 assign_source_group(${STB_INCLUDE})
 assign_source_group(${PEG_INCLUDE})
+assign_source_group(${ASSETS})
 endif(MSVC)
 
-add_executable(${PROJECT_NAME} ${SRC_FILES} ${STB_INCLUDE} ${PEG_INCLUDE})
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${STB_INCLUDE} ${PEG_INCLUDE} ${ASSETS})

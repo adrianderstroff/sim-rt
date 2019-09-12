@@ -1,0 +1,62 @@
+TRACER
+	TYPE       raytracer
+	RESOLUTION 160 160
+	SAMPLES    1000
+	DEPTH      10
+
+CAMERA
+	TYPE   simple
+	POS    (0,0,4)
+	LOOKAT (0,0,0)
+	UP     (0,1,0)
+	FOV    45
+
+MATERIALS
+	MATERIAL
+		NAME  light
+		TYPE  diffuselight
+		COLOR (1,1,1)
+	MATERIAL
+		NAME  red
+		TYPE  lambertian
+		COLOR (1,0,0)
+	MATERIAL
+		NAME  gray
+		TYPE  lambertian
+		COLOR (0.2,0.2,0.2)
+		
+OBJECTS
+	OBJECT
+		NAME     light
+		TYPE     sphere
+		POS      (0,5,0)
+		R        1.0
+		MATERIAL light
+	OBJECT
+		NAME     floor
+		TYPE     rectangle
+		POS      (0,-0.5,0)
+		XAXIS    (5,0,0)
+		YAXIS    (0,0,-5)
+		MATERIAL gray
+	OBJECT
+		NAME      cat
+		TYPE      mesh
+		PATH      ../mesh/cat.obj
+		INVERT    false
+		NORMALIZE true
+		SMOOTH    false
+		MATERIAL  red
+		
+SCENE
+	TYPE bvh
+	ELEMENTS
+		ELEMENT
+			OBJECT light
+		ELEMENT
+			OBJECT floor
+		ELEMENT
+			OBJECT cat
+			TRANSFORM
+				ROTATE (0,1,0) 10
+				TRANSLATE (0,0,-1)

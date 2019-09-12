@@ -47,7 +47,7 @@ TRACER
     DEPTH      100
 ```
 
-So far there are three different types of tracers ***raycaster, raytracer*** and ***debugtracer***. The debugtracer renders the intersections between the rays and the scene and displays those intersections as spheres, while rendering the scene from a different angle than the camera.
+So far there are three different types of tracers ***raycaster, raytracer*** and ***debugtracer***. The debugtracer renders the intersections between the rays and the scene and displays those intersections as spheres, while rendering the scene from a different angle than the camera and tries to be far away enough such that the whole scene is visible.
 
 The resolution keyword has to be followed by two positive integer numbers  bigger than zero. The first number is the width of the output image and the second number is the height of the output image.
 
@@ -57,7 +57,47 @@ The depth keyword is followed by a positive integer number bigger than zero. It 
 
 #### CAMERA
 
+Specifies the camera type and coordinate system. The camera together with the image plane specify the visible scene.
 
+```
+CAMERA
+    TYPE   simple
+	POS    (0,0,-2)
+	LOOKAT (0,0,0)
+	UP     (0,1,0)
+	FOV    45.0
+```
+
+There are two camera types, ***simple*** which models a pinhole camera and ***dof*** which models a camera with a specified focal length.
+
+The position of the camera is specified by a 3D vector. Together with the look at position it specifies the direction the camera is looking at. The up vector is needed to specify the orientation of the camera. The up vector mustn't be parallel to the view direction of the camera.
+
+The field of view is followed by a positive floating point value beteen (0, 180) while 0 and 180 are not valid values.
+
+```
+CAMERA
+    TYPE     dof
+	...
+    APERTURE 2.0
+```
+
+The dof camera has  an additional attribute for the size of the aperture. Bigger values result in blurrier images while an aperture of 0 is completely sharp.
+
+#### MATERIALS
+
+TODO
+
+#### OBJECTS
+
+TODO
+
+#### SCENE
+
+TODO
+
+## 3rd Party Assets
+
+The mesh ***cat.obj*** was made by [Juno Huang](https://www.turbosquid.com/Search/Artists/Juno-Huang) and is provided under the Royalty Free Licence. 
 
 ## License
 

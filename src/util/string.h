@@ -84,6 +84,9 @@ namespace rt {
 		return msg + padding;
 	}
 
+	/**
+	 * formats time in ms to hh:mm:ss.ms
+	 */
 	inline std::string format_time(double time) {
 		int h = static_cast<int>(std::floor(time / 3600));
 		time -= h * 3600.0;

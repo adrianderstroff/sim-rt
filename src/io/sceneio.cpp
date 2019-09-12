@@ -27,7 +27,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		CameraLookAt   <- 'LOOKAT' _ Vector
 		CameraUp       <- 'UP' _ Vector
 		CameraFOV	   <- 'FOV' _ Double
-		CameraAperture <- 'Aperture' _ Double
+		CameraAperture <- 'APERTURE' _ Double
 
 		# materials statement
 		Materials          <- 'MATERIALS' (_ Material)*
@@ -108,8 +108,9 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 	parser["Word"] = [](const peg::SemanticValues& sv) {
 		return sv.token();
 	};
-	parser["Path"] = [](const peg::SemanticValues& sv) {
+	parser["Path"] = [&](const peg::SemanticValues& sv) {
 		std::string path = sv.token();
+		path = fix_path(scenepath, path);
 		return path;
 	};
 	parser["Number"] = [](const peg::SemanticValues& sv) {

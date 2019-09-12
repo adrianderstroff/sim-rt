@@ -76,14 +76,9 @@ int main(int argc, char* argv[]) {
 		imagepath = std::string(argv[2]);
 	}
 	else {
-		std::cout << "Invalid number of command line arguments!" << std::endl;
-		std::cout << "Should be SCENE_PATH (OUTPUT_FILE_PATH)" << std::endl;
+		console::println("Invalid number of command line arguments!");
+		console::println("Should be SCENE_PATH (OUTPUT_FILE_PATH)");
 		exit(-1);
-	}
-
-	// grab input parameters
-	for (int i = 0; i < argc; ++i) {
-		std::cout << i << " " << argv[i] << std::endl;
 	}
 
 	// derive tracer, camera and world from scene file
@@ -93,6 +88,7 @@ int main(int argc, char* argv[]) {
 	scene->tracer->setBackgroundColor(vec3(0, 0, 0));
 	scene->tracer->run();
 	scene->tracer->write(imagepath);
+	console::println("Saved result at " + imagepath);
 
     return 0;
 }

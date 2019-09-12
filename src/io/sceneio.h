@@ -13,6 +13,7 @@
 #include "math/vec3.h"
 #include "texture/texture.h"
 #include "tracer/tracer.h"
+#include "util/path.h"
 #include "util/string.h"
 
 namespace rt {

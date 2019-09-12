@@ -1,7 +1,7 @@
 TRACER
 	TYPE       raytracer
 	RESOLUTION 256 240
-	SAMPLES    100
+	SAMPLES    1000
 	DEPTH      10
 
 CAMERA
@@ -24,7 +24,7 @@ MATERIALS
 	MATERIAL
 		NAME tex   
 		TYPE  lambertian
-		PATH ./image/test.jpg 
+		PATH ../image/sample1.jpg 
 		ITPLT bilinear
 		WRAP  clamp
 	MATERIAL
@@ -45,7 +45,7 @@ OBJECTS
 		NAME     wall1
 		TYPE     rectangle
 		POS      (0,0,2)
-		XAXIS    (2,0,0)
+		XAXIS    (-2,0,0)
 		YAXIS    (0,2,0)
 		MATERIAL white
 	OBJECT
