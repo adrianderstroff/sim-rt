@@ -145,10 +145,22 @@ namespace rt {
 	 */
 	vec3 max(const vec3& v1, const vec3& v2);
 	/**
+	 * returns the smallest component of vector v
+	 */
+	double min_comp(const vec3& v);
+	/**
+	 * returns the biggest component of vector v
+	 */
+	double max_comp(const vec3& v);
+	/**
 	 * performs a component wise square root
 	 * with regards to t with the formula (1-t)*v1 + t*v2
 	 */
 	vec3 sqrt(const vec3& v);
+	/**
+	 * clamps all components to (0,1)
+	 */
+	vec3 saturate(const vec3& v);
 }
 
 #endif//VEC3_H

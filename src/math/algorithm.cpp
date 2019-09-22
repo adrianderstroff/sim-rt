@@ -13,3 +13,7 @@ double rt::schlick(double cosine, double refractionIdx) {
 bool rt::is_between(double val, double vmin, double vmax) {
 	return vmin < val && val < vmax;
 }
+
+double rt::saturate(double val) {
+	return std::min(std::max(val, 0.0), 1.0);
+}

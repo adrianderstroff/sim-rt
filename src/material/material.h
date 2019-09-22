@@ -1,6 +1,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include "brdf.h"
 #include "dielectric.h"
 #include "diffuselight.h"
 #include "imaterial.h"

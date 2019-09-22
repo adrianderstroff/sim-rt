@@ -1,0 +1,84 @@
+TRACER
+	TYPE       raytracer
+	RESOLUTION 320 320
+	SAMPLES    1000
+	DEPTH      10
+
+CAMERA
+	TYPE   simple
+	POS    (0,0.6,2)
+	LOOKAT (0,0,0)
+	UP     (0,1,0)
+	FOV    45
+
+MATERIALS
+	MATERIAL
+		NAME  light
+		TYPE  diffuselight
+		CUBEMAP
+			PATH ../image/cubemap/posx.png
+			PATH ../image/cubemap/negx.png
+			PATH ../image/cubemap/posy.png
+			PATH ../image/cubemap/negy.png
+			PATH ../image/cubemap/posz.png
+			PATH ../image/cubemap/negz.png
+	MATERIAL
+		NAME      gold
+		TYPE      brdf
+		COLOR     (1,0.71,0.29)
+		METALNESS 1.0
+		ROUGHNESS 0.2
+		KD        0.5
+	MATERIAL
+		NAME      copper
+		TYPE      brdf
+		COLOR     (0.95,0.64,0.54)
+		METALNESS 1.0
+		ROUGHNESS 0.5
+		KD        1.0
+	MATERIAL
+		NAME normal
+		TYPE normal
+		
+OBJECTS
+	OBJECT
+		NAME     light
+		TYPE     cube
+		POS      (0,0,0)
+		WIDTH    10
+		HEIGHT   10
+		DEPTH    10
+		INVERT   true
+		MATERIAL light
+	OBJECT
+		NAME      cat1
+		TYPE      mesh
+		PATH      ../mesh/cat.obj
+		INVERT    false
+		NORMALIZE true
+		SMOOTH    true
+		MATERIAL  gold
+	OBJECT
+		NAME      cat2
+		TYPE      mesh
+		PATH      ../mesh/cat.obj
+		INVERT    false
+		NORMALIZE true
+		SMOOTH    true
+		MATERIAL  copper
+		
+SCENE
+	TYPE bvh
+	ELEMENTS
+		ELEMENT
+			OBJECT light
+		ELEMENT
+			OBJECT cat1
+			TRANSFORM
+				ROTATE (0,1,0) 10
+				TRANSLATE (0.5,0,-1)
+		ELEMENT
+			OBJECT cat2
+			TRANSFORM
+				ROTATE (0,1,0) 10
+				TRANSLATE (-0.5,0,-1)

@@ -30,16 +30,20 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		CameraAperture <- 'APERTURE' _ Double
 
 		# materials statement
-		Materials          <- 'MATERIALS' (_ Material)*
-		Material           <- 'MATERIAL' (_ MaterialAttrib)*
-		MaterialAttrib     <- MaterialName / MaterialType / MaterialColor / MaterialTexPath / MaterialGlassCoeff / MaterialTexInterp / MaterialTexWrap
-		MaterialName       <- 'NAME' _ Word
-		MaterialType       <- 'TYPE' _ Word
-		MaterialColor      <- 'COLOR' _ Vector
-		MaterialTexPath    <- 'PATH' _ Path
-		MaterialTexInterp  <- 'ITPLT' _ Word
-		MaterialTexWrap    <- 'WRAP' _ Word Word?
-		MaterialGlassCoeff <- 'COEFF' _ Double
+		Materials            <- 'MATERIALS' (_ Material)*
+		Material             <- 'MATERIAL' (_ MaterialAttrib)*
+		MaterialAttrib       <- MaterialName / MaterialType / MaterialColor / MaterialCubeMap / MaterialTexPath / MaterialGlassCoeff / MaterialTexInterp / MaterialTexWrap / MaterialMetalness / MaterialRoughness / MaterialDiffuseCoeff
+		MaterialName         <- 'NAME' _ Word
+		MaterialType         <- 'TYPE' _ Word
+		MaterialColor        <- 'COLOR' _ Vector
+		MaterialCubeMap      <- 'CUBEMAP' (_ MaterialTexPath)*
+		MaterialTexPath      <- 'PATH' _ Path
+		MaterialTexInterp    <- 'ITPLT' _ Word
+		MaterialTexWrap      <- 'WRAP' _ Word Word?
+		MaterialGlassCoeff   <- 'COEFF' _ Double
+		MaterialMetalness    <- 'METALNESS' _ Double
+		MaterialRoughness    <- 'ROUGHNESS' _ Double
+		MaterialDiffuseCoeff <- 'KD' _ Double
 
 		# objects statement
 		Objects             <- 'OBJECTS' (_ Object)*
@@ -282,6 +286,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		std::string name = map_get(attributemap, MATERIAL_NAME, "unnamed" + std::to_string(scene->materials.size()));
 		vec3 color = map_get(attributemap, MATERIAL_COLOR, vec3(1));
 		std::string texpath = map_get(attributemap, MATERIAL_TEX_PATH, std::string(""));
+		auto cubemappaths = map_get(attributemap, MATERIAL_CUBEMAP, std::vector<std::pair<MaterialAttribute, peg::any>>());
 		std::shared_ptr<ITexture> tex = std::make_shared<ConstantTexture>(color);
 		if (!texpath.empty()) {
 			auto& [image, status] = read_image(texpath);
@@ -293,6 +298,17 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 				imagetex->set_wrap_method(wrapx, wrapy);
 				tex = imagetex;
 			}
+		}
+		else if (cubemappaths.size() >= 6) {
+			std::vector<Image> images;
+			bool allstatus = true;
+			for (size_t i = 0; i < 6; ++i) {
+				std::string path = cubemappaths.at(i).second.get<std::string>();
+				auto& [image, status] = read_image(path);
+				allstatus = allstatus | status;
+				if (status) images.push_back(image);
+			}
+			if(allstatus) tex = std::make_shared<CubeMap>(images.at(0), images.at(1), images.at(2), images.at(3), images.at(4), images.at(5));
 		}
 
 		// create the appropriate tracer
@@ -318,6 +334,14 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		case MaterialType::MATERIAL_ISOTROPIC:
 			scene->materials.insert(std::make_pair(name, std::make_shared<Isotropic>(tex)));
 			break;
+		case MaterialType::MATERIAL_BRDF:
+			{
+				double metalness = map_get(attributemap, MATERIAL_METALNESS, 0.0);
+				double roughness = map_get(attributemap, MATERIAL_ROUGHNESS, 0.0);
+				double kd = map_get(attributemap, MATERIAL_DIFFUSE_COEFF, 0.5);
+				scene->materials.insert(std::make_pair(name, std::make_shared<BRDF>(tex, metalness, kd, roughness)));
+			}
+			break;
 		default: // normal material
 			scene->materials.insert(std::make_pair(name, std::make_shared<NormalMaterial>()));
 			break;
@@ -336,6 +360,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		MaterialType type = MATERIAL_NORMAL;
 		if      (val == "normal"      ) type = MATERIAL_NORMAL;
 		else if (val == "lambertian"  ) type = MATERIAL_LAMBERTIAN;
+		else if (val == "brdf"        ) type = MATERIAL_BRDF;
 		else if (val == "metal"       ) type = MATERIAL_METAL;
 		else if (val == "dielectric"  ) type = MATERIAL_DIELECTRIC;
 		else if (val == "diffuselight") type = MATERIAL_DIFFUSE_LIGHT;
@@ -348,6 +373,13 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		vec3 color = sv[0].get<vec3>();
 
 		return std::make_pair(MATERIAL_COLOR, peg::any(color));
+	};
+	parser["MaterialCubeMap"] = [](const peg::SemanticValues& sv) {
+		// grab all values in order
+		std::vector<std::pair<MaterialAttribute, peg::any>> cubemappaths;
+		vector_fill(cubemappaths, sv);
+
+		return std::make_pair(MATERIAL_CUBEMAP, peg::any(cubemappaths));
 	};
 	parser["MaterialTexPath"] = [](const peg::SemanticValues& sv) {
 		// grab value
@@ -387,6 +419,24 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		double coeff = sv[0].get<double>();
 		
 		return std::make_pair(MATERIAL_REFRACTION_COEFF, peg::any(coeff));
+	};
+	parser["MaterialMetalness"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		double metalness = sv[0].get<double>();
+
+		return std::make_pair(MATERIAL_METALNESS, peg::any(metalness));
+	};
+	parser["MaterialRoughness"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		double roughness = sv[0].get<double>();
+
+		return std::make_pair(MATERIAL_ROUGHNESS, peg::any(roughness));
+	};
+	parser["MaterialDiffuseCoeff"] = [](const peg::SemanticValues& sv) {
+		// grab value
+		double kd = sv[0].get<double>();
+
+		return std::make_pair(MATERIAL_DIFFUSE_COEFF, peg::any(kd));
 	};
 
 	/**
@@ -430,9 +480,9 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		case ObjectType::OBJECT_MESH:
 			{
 				std::string path = map_get(attributemap, OBJECT_MESH_PATH, std::string(""));
-				bool flip      = map_get(attributemap, OBJECT_INVERT,         false);
+				bool flip = map_get(attributemap, OBJECT_INVERT, false);
 				bool normalize = map_get(attributemap, OBJECT_MESH_NORMALIZE, false);
-				bool smooth    = map_get(attributemap, OBJECT_MESH_SMOOTH,    false);
+				bool smooth = map_get(attributemap, OBJECT_MESH_SMOOTH, false);
 				std::shared_ptr<IHitable> mesh = load_mesh(path, material, flip, normalize, smooth);
 				scene->objects.insert(std::make_pair(name, mesh));
 			}

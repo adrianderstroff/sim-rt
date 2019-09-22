@@ -29,6 +29,13 @@ namespace rt {
 	 * and false otherwise
 	 */
 	bool is_between(double val, double vmin, double vmax);
+
+	/**
+	 * bounds the value to the range [0, 1]
+	 * @param val - the value to bound
+	 * @return value or 0 or 1 is val is out of bounds
+	 */
+	double saturate(double val);
 }
 
 #endif//ALGORITHM_H

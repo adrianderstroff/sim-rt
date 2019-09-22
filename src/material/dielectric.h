@@ -14,7 +14,7 @@ namespace rt {
 		virtual bool scatter(const ray& rIn, const HitRecord& rec, vec3& attenuation, ray& scattered) const {
 			vec3 outwardNormal;
 			vec3 reflected = reflect(rIn.dir, rec.normal);
-			float niOverNt;
+			double niOverNt;
 			attenuation = m_texture->value(rec.u, rec.v, rec.lp);
 			double cosine;
 			double reflectProb;

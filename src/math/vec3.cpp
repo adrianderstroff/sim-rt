@@ -157,6 +157,19 @@ rt::vec3 rt::max(const rt::vec3& v1, const rt::vec3& v2) {
 	float z = std::max(v1.z, v2.z);
 	return rt::vec3(x, y, z);
 }
+double rt::min_comp(const vec3& v) {
+	return std::min(v.x, std::min(v.y, v.z));
+}
+double rt::max_comp(const vec3& v) {
+	return std::max(v.x, std::max(v.y, v.z));
+}
 rt::vec3 rt::sqrt(const vec3& v) {
 	return vec3(std::sqrt(v.x), std::sqrt(v.y), std::sqrt(v.z));
+}
+rt::vec3 rt::saturate(const vec3& v) {
+	return vec3(
+		saturate(v.x),
+		saturate(v.y),
+		saturate(v.z)
+	);
 }
