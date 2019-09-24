@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
 
 	// derive tracer, camera and world from scene file
 	auto scene = read_scene(scenepath);
+	if (!scene->success) return 1;
 
 	// run tracer
 	scene->tracer->setBackgroundColor(vec3(0, 0, 0));

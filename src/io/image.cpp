@@ -16,16 +16,16 @@ size_t rt::Image::index(size_t x, size_t y) const {
 
 void rt::Image::set(size_t x, size_t y, const vec3& col) {
 	size_t idx = index(x, y);
-    m_data.at(idx+0) = static_cast<unsigned char>(255.99*col.r);
-    m_data.at(idx+1) = static_cast<unsigned char>(255.99*col.g);
-    m_data.at(idx+2) = static_cast<unsigned char>(255.99*col.b);
+    m_data[idx+0] = static_cast<unsigned char>(255.99*col.r);
+    m_data[idx+1] = static_cast<unsigned char>(255.99*col.g);
+    m_data[idx+2] = static_cast<unsigned char>(255.99*col.b);
 }
 
 rt::vec3 rt::Image::get(size_t x, size_t y) const {
 	size_t idx = index(x, y);
-	float r = static_cast<float>(m_data.at(idx + 0)) / 255.f;
-	float g = static_cast<float>(m_data.at(idx + 1)) / 255.f;
-	float b = static_cast<float>(m_data.at(idx + 2)) / 255.f;
+	float r = static_cast<float>(m_data[idx + 0]) / 255.f;
+	float g = static_cast<float>(m_data[idx + 1]) / 255.f;
+	float b = static_cast<float>(m_data[idx + 2]) / 255.f;
 
 	return vec3(r, g, b);
 }

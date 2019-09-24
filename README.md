@@ -296,11 +296,143 @@ Isotropic material should be used with volumes. It describes volumes that scatte
 
 #### OBJECTS
 
-TODO
+The objects list specifies the geometry used. There are several object types that are going to be elaborated together with their attributes.
+
+```
+OBJECTS
+	OBJECT
+		NAME     light
+		TYPE     sphere
+		POS      (0,2,2)
+		R        1.0 
+		MATERIAL light
+	OBJECT
+		NAME     environment
+		TYPE     cube
+		POS      (0,0,0)
+		WIDTH    10
+		HEIGHT   10
+		DEPTH    10
+		INVERT   true
+		MATERIAL environment
+	OBJECT
+		NAME      cat1
+		TYPE      mesh
+		PATH      ../mesh/cat.obj
+		INVERT    false
+		NORMALIZE true
+		SMOOTH    true
+		MATERIAL  gold
+```
+
+Supported object types are ***cube***, ***cylinder***, ***rectangle***, ***sphere*** and ***mesh***.
+
+##### Cube
+
+```
+OBJECT
+    NAME     foo
+    TYPE     cube
+
+    POS      (0,0,0)
+    WIDTH    10
+    HEIGHT   10
+    DEPTH    10
+    INVERT   true
+
+    MATERIAL environment
+```
+
+A cube is specified by its position, and the dimensions width, height and depth. In addition there is a bool variable that flips the normals of the cube sides inwards if set to true. If not specified this attribute is false.
+
+##### Cylinder
+
+```
+OBJECT
+    NAME     foo
+    TYPE     cylinder
+
+    POS      (0,0,0)
+    POS2     (0,1,1)
+    R        2.0
+
+    MATERIAL glass
+```
+
+Cylinders have a start and end position as well as the radius of the cylinder.
+
+##### Rectangle
+
+```
+OBJECT
+    NAME     foo
+    TYPE     rectangle
+
+    POS      (0,0,0)
+    XAXIS    (2,0,0)
+    YAXIS    (0,3,0)
+
+    MATERIAL metal
+```
+
+A rectangle is specified by the position which is the position of the origin, and two axes that specify the plane and the half lenghts of the rectangle. The normal is calculate by `n = (xaxis x yaxis) / ||xaxis x yaxis||`.
+
+##### Sphere
+
+```
+OBJECT
+    NAME     foo
+    TYPE     sphere
+
+    POS      (0,0,0)
+    R        2.0
+
+    MATERIAL red
+```
+
+A sphere has a position and a radius.
+
+##### Mesh
+
+```
+OBJECT
+    NAME      foo
+    TYPE      mesh
+
+    PATH      ../mesh/cat.obj
+    INVERT    false
+    NORMALIZE true
+    SMOOTH    true
+
+    MATERIAL gold
+```
+
+Mesh is the most interesting object type since it allows to load obj files from the specified path. In addition three mesh attributes can be set. The normalize attribute flips the normals if set to true, its set to false when not specified. The normalize attribute scales down the mesh to fit inside a sphere with radius 1 when set to true. Its also set to false when not specified. The smooth attribute averages vertex normals at the edges where multiple triangle connect. It is also set to false when not specified.
 
 #### SCENE
 
-TODO
+The scene puts everything together. Only objects that are specified in the scene will be visible. So objects that had been specified in the objects list but not in the scene won't be visible in the scene. Objects in the scene can be transformed to allow for instancing.
+
+```
+SCENE
+	TYPE bvh
+	ELEMENTS
+		ELEMENT
+			OBJECT light
+		ELEMENT
+			OBJECT environment
+		ELEMENT
+			OBJECT cat1
+			TRANSFORM
+				ROTATE (0,1,0) 10
+				TRANSLATE (0.5,0,-1)
+```
+
+The scene starts with a ***SCENE*** keyword and followed by the type of the scene's organization which can be either ***bvh*** for a bounding volume hierarchy or ***list*** for a simple list. 
+
+Then the list of scene elements is specified by the ***ELEMENTS*** keyword followed by a list of elements. An element has to have a object attribute with the name of the attribute that has been specified in the objects list before. 
+
+In addition to that there is a transform attribute that transforms the respective object. The ***TRANSFORM*** keyword is followed by a list of transformations. One kind of transformation is a rotation which is specified by the axis of rotation and a counter-clockwise rotation angle in degrees. The other kind of transformation is a translation which is specified by a 3D vector which describes the direction of the translation. Those transformations can be mixed and there can be many tranformation types while the transformations are executed from top to down.
 
 ## 3rd Party Assets
 

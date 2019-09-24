@@ -1,20 +1,24 @@
 TRACER
 	TYPE       raytracer
 	RESOLUTION 320 320
-	SAMPLES    1000
+	SAMPLES    100
 	DEPTH      10
 
 CAMERA
-	TYPE   simple
-	POS    (0,0.6,2)
-	LOOKAT (0,0,0)
-	UP     (0,1,0)
-	FOV    45
+	TYPE     simple
+	POS      (0,0.6,2)
+	LOOKAT   (0,0,-1)
+	UP       (0,1,0)
+	FOV       45
 
 MATERIALS
 	MATERIAL
 		NAME  light
 		TYPE  diffuselight
+		COLOR (2,2,2)
+	MATERIAL
+		NAME  environment
+		TYPE  lambertian
 		CUBEMAP
 			PATH ../image/cubemap/posx.png
 			PATH ../image/cubemap/negx.png
@@ -27,29 +31,32 @@ MATERIALS
 		TYPE      brdf
 		COLOR     (1,0.71,0.29)
 		METALNESS 1.0
-		ROUGHNESS 0.2
-		KD        0.5
+		ROUGHNESS 0.1
+		KD        0.0
 	MATERIAL
 		NAME      copper
 		TYPE      brdf
 		COLOR     (0.95,0.64,0.54)
 		METALNESS 1.0
-		ROUGHNESS 0.5
-		KD        1.0
-	MATERIAL
-		NAME normal
-		TYPE normal
+		ROUGHNESS 0.99
+		KD        0.0
 		
 OBJECTS
 	OBJECT
 		NAME     light
+		TYPE     sphere
+		POS      (0,2,2)
+		R        1.0 
+		MATERIAL light
+	OBJECT
+		NAME     environment
 		TYPE     cube
 		POS      (0,0,0)
 		WIDTH    10
 		HEIGHT   10
 		DEPTH    10
 		INVERT   true
-		MATERIAL light
+		MATERIAL environment
 	OBJECT
 		NAME      cat1
 		TYPE      mesh
@@ -72,6 +79,8 @@ SCENE
 	ELEMENTS
 		ELEMENT
 			OBJECT light
+		ELEMENT
+			OBJECT environment
 		ELEMENT
 			OBJECT cat1
 			TRANSFORM

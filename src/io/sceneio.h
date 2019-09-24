@@ -24,6 +24,7 @@ namespace rt {
 		std::map<std::string, std::shared_ptr<IHitable>> objects;
 		std::shared_ptr<IOrganization> organization;
 		std::shared_ptr<IHitable> world;
+		bool success;
 	};
 
 	enum TracerType {

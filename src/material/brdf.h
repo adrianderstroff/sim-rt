@@ -58,13 +58,12 @@ namespace rt {
 				double d = normal_distribution_ggx(ndoth, a);
 				double g = geometry_smith(ndotl, ndotv, k);
 				vec3 f = fresnel_schlick(ldoth, f0);
-				vec3 ggx = (d * f * g) / (4 * ndotl * ndotv);
 
-				double prob = d * ndoth / (4 * ldoth);
+				double denom = std::max(4 * ndotl * ndotv, 1.0);
 
-				// accumulate
-				attenuation = ggx / (prob * (1.0 - m_kd));
-				attenuation = saturate(attenuation);
+				vec3 ggx = (d * f * g) / denom;
+
+				attenuation = ggx;
 			}
 
 			return true;
@@ -86,7 +85,7 @@ namespace rt {
 			double a2 = a * a;
 			double d = (ndoth * (a2*ndoth - ndoth) + 1.0);
 
-			return a2 / (PI * d * d);
+			return saturate(a2 / (PI * d * d));
 		}
 
 

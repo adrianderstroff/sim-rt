@@ -21,7 +21,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 
 		# camera statements
 		Camera         <- 'CAMERA' (_ CameraAttrib)* 
-		CameraAttrib   <- CameraType / CameraPos / CameraLookAt / CameraUp / CameraFOV
+		CameraAttrib   <- CameraType / CameraPos / CameraLookAt / CameraUp / CameraFOV / CameraAperture
 		CameraType     <- 'TYPE' _ Word
 		CameraPos      <- 'POS' _ Vector
 		CameraLookAt   <- 'LOOKAT' _ Vector
@@ -93,18 +93,23 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 
 
 
-	// setup parser
-	peg::parser parser;
-	parser.log = [](size_t line, size_t col, const std::string& msg) {
-		std::cerr << line << ":" << col << ": " << msg << "\n";
-	};
-	auto ok = parser.load_grammar(grammar);
-	assert(ok);
+	
 
 
 	// setup scene
 	std::shared_ptr<SceneData> scene = std::make_shared<SceneData>();
+	scene->success = true;
 
+	// setup parser
+	peg::parser parser;
+	parser.log = [&](size_t line, size_t col, const std::string& msg) {
+		std::cerr << line << ":" << col << ": " << msg << "\n";
+		scene->success = false;
+	};
+	if (!parser.load_grammar(grammar)) {
+		scene->success = false;
+		return scene;
+	}
 
 	/**
 	 * define general parser rules
