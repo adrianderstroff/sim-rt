@@ -19,7 +19,7 @@ MATERIALS
 	MATERIAL
 		NAME  environment
 		TYPE  lambertian
-		CUBEMAP
+		CUBECOLOR
 			PATH ../image/cubemap/posx.png
 			PATH ../image/cubemap/negx.png
 			PATH ../image/cubemap/posy.png

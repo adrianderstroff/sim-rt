@@ -32,11 +32,12 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		# materials statement
 		Materials            <- 'MATERIALS' (_ Material)*
 		Material             <- 'MATERIAL' (_ MaterialAttrib)*
-		MaterialAttrib       <- MaterialName / MaterialType / MaterialColor / MaterialCubeMap / MaterialTexPath / MaterialGlassCoeff / MaterialTexInterp / MaterialTexWrap / MaterialMetalness / MaterialRoughness / MaterialDiffuseCoeff
+		MaterialAttrib       <- MaterialName / MaterialType / MaterialColor / MaterialCubeMap / MaterialCubeColor / MaterialTexPath / MaterialGlassCoeff / MaterialTexInterp / MaterialTexWrap / MaterialMetalness / MaterialRoughness / MaterialDiffuseCoeff
 		MaterialName         <- 'NAME' _ Word
 		MaterialType         <- 'TYPE' _ Word
 		MaterialColor        <- 'COLOR' _ Vector
 		MaterialCubeMap      <- 'CUBEMAP' (_ MaterialTexPath)*
+		MaterialCubeColor    <- 'CUBECOLOR' (_ MaterialColor)*
 		MaterialTexPath      <- 'PATH' _ Path
 		MaterialTexInterp    <- 'ITPLT' _ Word
 		MaterialTexWrap      <- 'WRAP' _ Word Word?
@@ -292,6 +293,7 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		vec3 color = map_get(attributemap, MATERIAL_COLOR, vec3(1));
 		std::string texpath = map_get(attributemap, MATERIAL_TEX_PATH, std::string(""));
 		auto cubemappaths = map_get(attributemap, MATERIAL_CUBEMAP, std::vector<std::pair<MaterialAttribute, peg::any>>());
+		auto cubemapcolors = map_get(attributemap, MATERIAL_CUBECOLOR, std::vector<std::pair<MaterialAttribute, peg::any>>());
 		std::shared_ptr<ITexture> tex = std::make_shared<ConstantTexture>(color);
 		if (!texpath.empty()) {
 			auto& [image, status] = read_image(texpath);
@@ -314,6 +316,16 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 				if (status) images.push_back(image);
 			}
 			if(allstatus) tex = std::make_shared<CubeMap>(images.at(0), images.at(1), images.at(2), images.at(3), images.at(4), images.at(5));
+		}
+		else if (cubemapcolors.size() >= 6) {
+			std::vector<Image> images;
+			for (size_t i = 0; i < 6; ++i) {
+				vec3 color = cubemapcolors.at(i).second.get<vec3>();
+				Image image(1,1,3);
+				image.set(0, 0, color);
+				images.push_back(image);
+			}
+			tex = std::make_shared<CubeMap>(images.at(0), images.at(1), images.at(2), images.at(3), images.at(4), images.at(5));
 		}
 
 		// create the appropriate tracer
@@ -385,6 +397,13 @@ std::shared_ptr<rt::SceneData> rt::read_scene(std::string scenepath) {
 		vector_fill(cubemappaths, sv);
 
 		return std::make_pair(MATERIAL_CUBEMAP, peg::any(cubemappaths));
+	};
+	parser["MaterialCubeColor"] = [](const peg::SemanticValues& sv) {
+		// grab all values in order
+		std::vector<std::pair<MaterialAttribute, peg::any>> cubecolors;
+		vector_fill(cubecolors, sv);
+
+		return std::make_pair(MATERIAL_CUBECOLOR, peg::any(cubecolors));
 	};
 	parser["MaterialTexPath"] = [](const peg::SemanticValues& sv) {
 		// grab value
